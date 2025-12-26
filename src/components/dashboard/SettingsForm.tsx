@@ -9,7 +9,7 @@ import {
   Stack,
   useMantineColorScheme,
 } from "@mantine/core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updateUserSettings } from "@/actions/user-actions";
 import { notifications } from "@mantine/notifications";
 import { IconSun, IconMoon } from "@tabler/icons-react";
@@ -20,6 +20,14 @@ export function SettingsForm({ initialCurrency }: { initialCurrency: string }) {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const [currency, setCurrency] = useState<string | null>(initialCurrency);
   const [loading, setLoading] = useState(false);
+  
+  // 👇 1. Add Mounted State
+  const [mounted, setMounted] = useState(false);
+
+  // 👇 2. Set Mounted on Client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSave = async () => {
     if (!currency) return;
@@ -60,7 +68,8 @@ export function SettingsForm({ initialCurrency }: { initialCurrency: string }) {
           size="lg"
           onLabel={<IconSun size={16} />}
           offLabel={<IconMoon size={16} />}
-          checked={colorScheme === "light"}
+          // 👇 3. Fix Hydration Error: Force false until mounted
+          checked={mounted && colorScheme === "light"}
           onChange={() => toggleColorScheme()}
         />
       </Group>

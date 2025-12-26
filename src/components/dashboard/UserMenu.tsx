@@ -1,8 +1,9 @@
 "use client";
 
-import { Avatar, Group, Text, Menu, UnstyledButton, rem } from "@mantine/core";
-import { IconLogout, IconSettings, IconChevronDown } from "@tabler/icons-react";
+import { Avatar, Menu, rem, Text, ActionIcon } from "@mantine/core";
+import { IconLogout, IconSettings, IconUser } from "@tabler/icons-react";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 interface UserMenuProps {
   image?: string | null;
@@ -11,33 +12,86 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ image, name, email }: UserMenuProps) {
+  const getInitials = (n?: string | null) => {
+    if (!n) return "??";
+    return n
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
   return (
-    <Menu shadow="md" width={200}>
+    <Menu 
+      shadow="lg" 
+      width={260} // Wider for better mobile readability
+      position="bottom-end" 
+      withArrow 
+      arrowPosition="center"
+      trigger="click" // 👈 FIX: Forces click-only (stops hover glitches on mobile)
+      zIndex={1000}   // 👈 FIX: Ensures it sits above everything
+      withinPortal    // 👈 FIX: Renders outside the DOM hierarchy to avoid clipping
+      transitionProps={{ transition: 'pop-top-right', duration: 200 }}
+    >
       <Menu.Target>
-        <UnstyledButton>
-          <Group gap={7}>
-            <Avatar src={image} radius="xl" size={30} />
-            <div style={{ flex: 1 }}>
-              <Text size="sm" fw={500} style={{ lineHeight: 1 }}>{name}</Text>
-              <Text c="dimmed" size="xs" style={{ lineHeight: 1 }}>{email}</Text>
-            </div>
-            <IconChevronDown style={{ width: rem(12), height: rem(12) }} stroke={1.5} />
-          </Group>
-        </UnstyledButton>
+        {/* 👇 FIX: Changed to ActionIcon for better touch handling */}
+        <ActionIcon 
+          variant="transparent" 
+          size="lg" 
+          radius="xl"
+          aria-label="User menu"
+        >
+          <Avatar 
+            src={image} 
+            radius="xl" 
+            size={36} 
+            color="violet" 
+            style={{ cursor: 'pointer' }}
+          >
+            {getInitials(name)}
+          </Avatar>
+        </ActionIcon>
       </Menu.Target>
 
-      <Menu.Dropdown>
-        <Menu.Label>Settings</Menu.Label>
-        <Menu.Item leftSection={<IconSettings style={{ width: rem(14), height: rem(14) }} />}>
-          Account settings
+      <Menu.Dropdown p="xs">
+        <Menu.Label pb={4}>Signed in as</Menu.Label>
+        <Menu.Item 
+          leftSection={<IconUser size={16} />} 
+          disabled 
+          style={{ opacity: 1, color: 'var(--mantine-color-text)' }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Text size="sm" fw={600}>{name || "User"}</Text>
+            <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
+              {email}
+            </Text>
+          </div>
         </Menu.Item>
-        <Menu.Divider />
+        
+        <Menu.Divider my="xs" />
+
+        <Menu.Label>Settings</Menu.Label>
+        
+        {/* 👇 Larger touch targets (py={8}) */}
+        <Menu.Item 
+          component={Link}
+          href="/settings"
+          py={8}
+          leftSection={<IconSettings style={{ width: rem(18), height: rem(18) }} />}
+        >
+          <Text size="sm">Account settings</Text>
+        </Menu.Item>
+        
+        <Menu.Divider my="xs" />
+        
         <Menu.Item 
           color="red" 
-          leftSection={<IconLogout style={{ width: rem(14), height: rem(14) }} />}
+          py={8}
+          leftSection={<IconLogout style={{ width: rem(18), height: rem(18) }} />}
           onClick={() => signOut({ callbackUrl: "/" })}
         >
-          Sign out
+          <Text size="sm">Sign out</Text>
         </Menu.Item>
       </Menu.Dropdown>
     </Menu>
