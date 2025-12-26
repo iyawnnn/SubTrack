@@ -22,6 +22,9 @@ model User {
   // Custom Relations
   subscriptions Subscription[]
   vendors       Vendor[]
+  
+  // New Field: User's preferred display currency
+  preferredCurrency String @default("PHP")
  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -101,6 +104,7 @@ model Subscription {
 
   // Cost & Frequency
   cost      Decimal  @db.Decimal(10, 2)
+  currency  String   @default("USD")
   frequency BillingFrequency @default(MONTHLY)
 
   // Dates

@@ -3,6 +3,7 @@ import { z } from "zod";
 export const subscriptionSchema = z.object({
   name: z.string().min(1, "Vendor name is required"),
   website: z.string().optional(),
+  currency: z.string().length(3).default("USD"),
   cost: z.number().min(0, "Cost cannot be negative"),
   frequency: z.enum(["MONTHLY", "YEARLY"]),
   startDate: z.coerce.date(), 

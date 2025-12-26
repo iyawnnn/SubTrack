@@ -60,16 +60,20 @@ export async function addSubscription(
     }
 
     // 3. Create Subscription
-    const renewalDate = calculateRenewalDate(subData.startDate, subData.frequency);
+    const renewalDate = calculateRenewalDate(
+      subData.startDate,
+      subData.frequency
+    );
 
     await prisma.subscription.create({
       data: {
         cost: subData.cost,
+        currency: subData.currency, // 👈 ADDED THIS
         frequency: subData.frequency,
         startDate: subData.startDate,
         nextRenewalDate: renewalDate,
         isTrial: subData.isTrial,
-        category: subData.category, // Pass Category
+        category: subData.category,
         userId: session.user.id,
         vendorId: vendor.id,
       },
@@ -83,7 +87,7 @@ export async function addSubscription(
   }
 }
 
-// --- NEW: UPDATE SUBSCRIPTION ---
+// --- UPDATE SUBSCRIPTION ---
 export async function updateSubscription(
   id: string,
   data: SubscriptionFormData
@@ -113,29 +117,35 @@ export async function updateSubscription(
     }
 
     // 2. Handle Vendor Change
-    // If the name changed, find or create the new vendor
     let vendorId = existingSub.vendorId;
-    
-    // We try to find the vendor matching the new name
+
     let vendor = await prisma.vendor.findFirst({
-        where: { name: { equals: name, mode: "insensitive" }, userId: session.user.id }
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        userId: session.user.id,
+      },
     });
 
-    // If it doesn't exist, create it
     if (!vendor) {
-        vendor = await prisma.vendor.create({ data: { name, userId: session.user.id } });
+      vendor = await prisma.vendor.create({
+        data: { name, userId: session.user.id },
+      });
     }
     vendorId = vendor.id;
 
     // 3. Recalculate Renewal
-    const renewalDate = calculateRenewalDate(subData.startDate, subData.frequency);
+    const renewalDate = calculateRenewalDate(
+      subData.startDate,
+      subData.frequency
+    );
 
     // 4. Update Database
     await prisma.subscription.update({
       where: { id },
       data: {
-        vendorId: vendorId, // Link to potentially new vendor
+        vendorId: vendorId,
         cost: subData.cost,
+        currency: subData.currency, // 👈 ADDED THIS
         frequency: subData.frequency,
         startDate: subData.startDate,
         nextRenewalDate: renewalDate,
@@ -179,7 +189,10 @@ export async function deleteSubscription(id: string): Promise<ActionResponse> {
 }
 
 // --- HELPER FUNCTION ---
-function calculateRenewalDate(startDate: Date, frequency: "MONTHLY" | "YEARLY") {
+function calculateRenewalDate(
+  startDate: Date,
+  frequency: "MONTHLY" | "YEARLY"
+) {
   const date = new Date(startDate);
   if (frequency === "MONTHLY") {
     date.setMonth(date.getMonth() + 1);

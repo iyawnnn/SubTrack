@@ -1,8 +1,24 @@
 "use client";
 
-import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group, Title, NavLink, Burger } from "@mantine/core";
+import {
+  AppShell,
+  AppShellHeader,
+  AppShellNavbar,
+  AppShellMain,
+  Group,
+  Title,
+  NavLink,
+  Burger,
+  ActionIcon,
+  useMantineColorScheme,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDashboard, IconSettings } from "@tabler/icons-react";
+import {
+  IconDashboard,
+  IconSettings,
+  IconSun,
+  IconMoon,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserMenu } from "./UserMenu";
@@ -19,6 +35,7 @@ interface DashboardShellProps {
 export function DashboardShell({ children, user }: DashboardShellProps) {
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
+  const { toggleColorScheme } = useMantineColorScheme();
 
   return (
     <AppShell
@@ -30,25 +47,56 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
       }}
       padding="md"
     >
-      <AppShellHeader p="md">
+      <AppShellHeader p="md" className="glass-header">
         <Group h="100%" px="md" justify="space-between">
           <Group>
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <Title order={3} c="blue">SubTrack</Title>
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
+            <Title order={3} c="azure">
+              SubTrack
+            </Title>
           </Group>
-          
-          <UserMenu image={user?.image} name={user?.name} email={user?.email} />
+
+          <Group>
+            <ActionIcon
+              onClick={() => toggleColorScheme()}
+              variant="default"
+              size="lg"
+              radius="md"
+              aria-label="Toggle color scheme"
+            >
+              {/* Sun Icon: Shows ONLY in Dark Mode (to switch to Light) */}
+              <IconSun className="hide-in-light" size={18} stroke={1.5} />
+
+              {/* Moon Icon: Shows ONLY in Light Mode (to switch to Dark) */}
+              <IconMoon className="hide-in-dark" size={18} stroke={1.5} />
+            </ActionIcon>
+            <UserMenu
+              image={user?.image}
+              name={user?.name}
+              email={user?.email}
+            />
+          </Group>
         </Group>
       </AppShellHeader>
 
-      <AppShellNavbar p="md">
+      <AppShellNavbar p="md" className="glass-navbar">
         <NavLink
           label="Dashboard"
           leftSection={<IconDashboard size="1rem" stroke={1.5} />}
           component={Link}
           href="/dashboard"
           active={pathname === "/dashboard"}
-          onClick={() => { if (opened) toggle(); }} // Close menu on click (mobile)
+          onClick={() => {
+            if (opened) toggle();
+          }}
+          variant="light"
+          color="azure"
+          style={{ borderRadius: "8px", marginBottom: "4px" }}
         />
         <NavLink
           label="Settings"
@@ -56,13 +104,16 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           component={Link}
           href="/settings"
           active={pathname === "/settings"}
-          onClick={() => { if (opened) toggle(); }}
+          onClick={() => {
+            if (opened) toggle();
+          }}
+          variant="light"
+          color="azure"
+          style={{ borderRadius: "8px" }}
         />
       </AppShellNavbar>
 
-      <AppShellMain bg="gray.0">
-        {children}
-      </AppShellMain>
+      <AppShellMain>{children}</AppShellMain>
     </AppShell>
   );
 }

@@ -1,18 +1,31 @@
 "use client";
 
 import { useForm } from "@mantine/form";
-import { Modal, TextInput, NumberInput, Select, Button, Group, Switch, Stack } from "@mantine/core";
+import {
+  Modal,
+  TextInput,
+  NumberInput,
+  Select,
+  Button,
+  Group,
+  Switch,
+  Stack,
+} from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { addSubscription, updateSubscription } from "@/actions/subscription-actions"; 
+import {
+  addSubscription,
+  updateSubscription,
+} from "@/actions/subscription-actions";
 import { notifications } from "@mantine/notifications";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CURRENCIES, CURRENCY_SYMBOLS } from "@/lib/currency-helper"; // Ensure this import exists
 
-// Define the shape of data we might edit
 interface SubscriptionData {
   id: string;
   vendor: { name: string };
   cost: number;
+  currency: string; // 👈 Ensure this is here
   frequency: string;
   startDate: Date;
   isTrial: boolean;
@@ -22,20 +35,30 @@ interface SubscriptionData {
 interface SubscriptionModalProps {
   opened: boolean;
   close: () => void;
-  subToEdit?: SubscriptionData | null; // Optional prop for editing
+  subToEdit?: SubscriptionData | null;
 }
 
-const CATEGORIES = ["Entertainment", "Work", "Utilities", "Dev Tools", "Personal"];
+const CATEGORIES = [
+  "Entertainment",
+  "Work",
+  "Utilities",
+  "Dev Tools",
+  "Personal",
+];
 
-export function SubscriptionModal({ opened, close, subToEdit }: SubscriptionModalProps) {
+export function SubscriptionModal({
+  opened,
+  close,
+  subToEdit,
+}: SubscriptionModalProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Initialize form
   const form = useForm({
     initialValues: {
       name: "",
       cost: 0,
+      currency: "USD", // 👈 Default value
       frequency: "MONTHLY",
       category: "Personal",
       startDate: new Date(),
@@ -48,62 +71,68 @@ export function SubscriptionModal({ opened, close, subToEdit }: SubscriptionModa
     },
   });
 
-  // MAGIC: Watch for "subToEdit" changes and fill the form
+  // Get dynamic symbol
+  const currentSymbol = CURRENCY_SYMBOLS[form.values.currency] || "$";
+
   useEffect(() => {
     if (subToEdit) {
       form.setValues({
         name: subToEdit.vendor.name,
         cost: Number(subToEdit.cost),
+        currency: subToEdit.currency || "USD", // 👈 Load existing currency
         frequency: subToEdit.frequency,
         category: subToEdit.category || "Personal",
         startDate: new Date(subToEdit.startDate),
         isTrial: subToEdit.isTrial,
       });
     } else {
-      form.reset(); // Reset if adding new
+      form.reset();
     }
-  }, [subToEdit]); // Run this whenever subToEdit changes
+  }, [subToEdit]);
 
   const handleSubmit = async (values: typeof form.values) => {
     setLoading(true);
-    
     let result;
 
+    const payload = {
+      ...values,
+      frequency: values.frequency as "MONTHLY" | "YEARLY",
+    };
+
     if (subToEdit) {
-      // --- UPDATE MODE ---
-      result = await updateSubscription(subToEdit.id, {
-        ...values,
-        frequency: values.frequency as "MONTHLY" | "YEARLY",
-      });
+      result = await updateSubscription(subToEdit.id, payload);
     } else {
-      // --- ADD MODE ---
-      result = await addSubscription({
-        ...values,
-        frequency: values.frequency as "MONTHLY" | "YEARLY",
-      });
+      result = await addSubscription(payload);
     }
 
     setLoading(false);
 
     if (result.success) {
-      notifications.show({ 
-        title: "Success", 
-        message: subToEdit ? "Subscription updated" : "Subscription added", 
-        color: "green" 
+      notifications.show({
+        title: "Success",
+        message: subToEdit ? "Subscription updated" : "Subscription added",
+        color: "green",
       });
-      if (!subToEdit) form.reset(); // Only reset on add
+      if (!subToEdit) form.reset();
       router.refresh();
       close();
     } else {
-      notifications.show({ title: "Error", message: result.message, color: "red" });
+      notifications.show({
+        title: "Error",
+        message: result.message,
+        color: "red",
+      });
     }
   };
 
   return (
-    <Modal 
-      opened={opened} 
-      onClose={() => { close(); form.reset(); }} 
-      title={subToEdit ? "Edit Subscription" : "Add Subscription"} 
+    <Modal
+      opened={opened}
+      onClose={() => {
+        close();
+        form.reset();
+      }}
+      title={subToEdit ? "Edit Subscription" : "Add Subscription"}
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
@@ -114,32 +143,47 @@ export function SubscriptionModal({ opened, close, subToEdit }: SubscriptionModa
             required
             {...form.getInputProps("name")}
           />
-          
-          <Group grow>
+
+          <Group grow align="flex-start">
             <NumberInput
               label="Price"
-              prefix="$"
               decimalScale={2}
               allowNegative={false}
+              prefix={currentSymbol + " "}
               required
               {...form.getInputProps("cost")}
+              style={{ flex: 2 }}
             />
+            {/* 👇 THIS WAS MISSING IN YOUR FILE.
+               Make sure this Select component is here!
+            */}
+            <Select
+              label="Currency"
+              data={CURRENCIES}
+              required
+              allowDeselect={false}
+              searchable
+              {...form.getInputProps("currency")}
+              style={{ flex: 1 }}
+            />
+          </Group>
+
+          <Group grow>
             <Select
               label="Billing Cycle"
-              data={['MONTHLY', 'YEARLY']}
+              data={["MONTHLY", "YEARLY"]}
               required
               allowDeselect={false}
               {...form.getInputProps("frequency")}
             />
+            <Select
+              label="Category"
+              data={CATEGORIES}
+              required
+              allowDeselect={false}
+              {...form.getInputProps("category")}
+            />
           </Group>
-
-          <Select
-            label="Category"
-            data={CATEGORIES}
-            required
-            allowDeselect={false}
-            {...form.getInputProps("category")}
-          />
 
           <DatePickerInput
             label="Start Date"

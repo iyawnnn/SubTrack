@@ -1,13 +1,32 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateMonthlyBurnRate } from "@/lib/calculations";
-import { SimpleGrid, Paper, Text, Group, ThemeIcon, Title, Container, Stack } from "@mantine/core";
-import { IconCoin, IconCalendarStats, IconAlertCircle } from "@tabler/icons-react";
-import { SubscriptionTable } from "@/components/dashboard/SubscriptionTable";
+import { Group, Title, Text, Container } from "@mantine/core";
 import { AddButton } from "@/components/dashboard/AddButton";
-import { SpendingChart } from "@/components/dashboard/SpendingChart";
-import { CategoryChart } from "@/components/dashboard/CategoryChart";
-import { UpcomingBills } from "@/components/dashboard/UpcomingBills";
+import {
+  StatsSection,
+  ChartsSection,
+  TableSection,
+  InsightsSection,
+} from "@/components/dashboard/DashboardWidgets";
+
+// Intelligence Imports
+import {
+  getRedundancyInsights,
+  getGraveyardStats,
+  getCashFlowRunway,
+} from "@/lib/intelligence";
+
+// Static Rates (In a real app, fetch these from DB or API)
+const RATES = {
+  USD: 1,
+  PHP: 58.0,
+  EUR: 0.93,
+  GBP: 0.79,
+  AUD: 1.52,
+  CAD: 1.36,
+  JPY: 155.0,
+};
 
 async function getSubscriptionData() {
   const session = await auth();
@@ -16,22 +35,47 @@ async function getSubscriptionData() {
   const data = await prisma.subscription.findMany({
     where: { userId: session.user.id },
     orderBy: { cost: "desc" },
-    include: { vendor: true }
+    include: { vendor: true },
   });
-  
-  return data.map(sub => ({
+
+  return data.map((sub) => ({
     ...sub,
-    cost: Number(sub.cost)
+    cost: Number(sub.cost),
+    // Ensure these match the types expected by intelligence.ts
+    status: sub.status as string,
+    frequency: sub.frequency as string,
   }));
 }
 
 export default async function DashboardPage() {
+  const session = await auth();
   const subs = await getSubscriptionData();
 
-  // Financial Engine
-  const monthlyBurn = calculateMonthlyBurnRate(subs);
+  // 1. Get User's Preferred Currency (Default to USD if not set)
+  const user = await prisma.user.findUnique({
+    where: { id: session?.user?.id },
+    select: { preferredCurrency: true },
+  });
+  const baseCurrency = user?.preferredCurrency || "USD";
+
+  // 2. Financial Engine (Pass rates & currency)
+  const monthlyBurn = calculateMonthlyBurnRate(subs, RATES, baseCurrency);
   const annualProjection = monthlyBurn * 12;
-  const activeTrials = subs.filter(s => s.isTrial).length;
+  const activeTrials = subs.filter((s) => s.isTrial).length;
+
+  // 3. Intelligence Engine 🧠
+  const redundancy = getRedundancyInsights(subs);
+  const graveyard = getGraveyardStats(subs, RATES, baseCurrency);
+  const runway = getCashFlowRunway(subs, RATES, baseCurrency);
+
+  // Bundle data
+  const dashboardData = {
+    subs,
+    monthlyBurn,
+    annualProjection,
+    activeTrials,
+    currency: baseCurrency,
+  };
 
   return (
     <Container size="lg" py="lg">
@@ -43,64 +87,22 @@ export default async function DashboardPage() {
         <AddButton />
       </Group>
 
-      {/* STATS GRID */}
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md" mb="xl">
-        <Paper shadow="xs" p="xl" radius="md" withBorder>
-          <Group>
-            <ThemeIcon color="blue" variant="light" size={48} radius="md">
-              <IconCoin size="1.5rem" stroke={1.5} />
-            </ThemeIcon>
-            <div>
-              <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Monthly Burn</Text>
-              <Text fw={700} size="xl">${monthlyBurn.toFixed(2)}</Text>
-            </div>
-          </Group>
-        </Paper>
+      {/* 1. Main Stats (Burn Rate, etc.) */}
+      <StatsSection {...dashboardData} />
 
-        <Paper shadow="xs" p="xl" radius="md" withBorder>
-          <Group>
-            <ThemeIcon color="violet" variant="light" size={48} radius="md">
-              <IconCalendarStats size="1.5rem" stroke={1.5} />
-            </ThemeIcon>
-            <div>
-              <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Annual Projection</Text>
-              <Text fw={700} size="xl">${annualProjection.toFixed(2)}</Text>
-            </div>
-          </Group>
-        </Paper>
+      {/* 2. Intelligence Layer (Redundancy, Graveyard, Forecast) */}
+      <InsightsSection
+        redundancy={redundancy}
+        graveyard={graveyard}
+        runway={runway}
+        currency={baseCurrency}
+      />
 
-        <Paper shadow="xs" p="xl" radius="md" withBorder>
-          <Group>
-            <ThemeIcon color="orange" variant="light" size={48} radius="md">
-              <IconAlertCircle size="1.5rem" stroke={1.5} />
-            </ThemeIcon>
-            <div>
-              <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Active Trials</Text>
-              <Text fw={700} size="xl">{activeTrials}</Text>
-            </div>
-          </Group>
-        </Paper>
-      </SimpleGrid>
+      {/* 3. Charts */}
+      <ChartsSection subs={subs} />
 
-      {/* CHARTS & ANALYTICS ROW */}
-      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md" mb="xl">
-        {/* Main Spending Chart takes up 2 columns */}
-        <div style={{ gridColumn: "span 2" }}>
-           <SpendingChart data={subs} />
-        </div>
-        
-        {/* Stack the Pie Chart and Upcoming list in the 3rd column */}
-        <Stack>
-          <CategoryChart data={subs} />
-          <UpcomingBills data={subs} />
-        </Stack>
-      </SimpleGrid>
-
-      {/* THE DATA TABLE */}
-      <Paper p="md" withBorder radius="md">
-        <Title order={4} mb="md" px="xs">Active Subscriptions</Title>
-        <SubscriptionTable data={subs} />
-      </Paper>
+      {/* 4. Table */}
+      <TableSection subs={subs} />
     </Container>
   );
 }
