@@ -1,4 +1,4 @@
-// Fallback in case the API goes down
+// Fallback only used if the API fails
 const FALLBACK_RATES: Record<string, number> = {
   USD: 1,
   PHP: 58.50,
@@ -11,10 +11,8 @@ const FALLBACK_RATES: Record<string, number> = {
 
 export async function getLiveRates(base = "USD"): Promise<Record<string, number>> {
   try {
-    // 1. Fetch from free public API
-    // revalidate: 86400 = Cache for 24 Hours (Daily Update)
     const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`, {
-      next: { revalidate: 86400 }, 
+      next: { revalidate: 0 }, 
     });
 
     if (!res.ok) {
@@ -22,7 +20,6 @@ export async function getLiveRates(base = "USD"): Promise<Record<string, number>
     }
 
     const data = await res.json();
-
     return data.rates;
   } catch (error) {
     console.warn("⚠️ Currency API failed, using fallback rates.", error);

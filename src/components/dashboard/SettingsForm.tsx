@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { updateUserSettings } from "@/actions/user-actions";
 import { toast } from "sonner";
 import { Loader2, Save, Moon, Sun, Laptop } from "lucide-react";
-import { useTheme } from "next-themes"; // 👈 Import useTheme
+import { useTheme } from "next-themes"; // Import hook
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,11 +29,11 @@ export function SettingsForm({ user }: { user: any }) {
   const [loading, setLoading] = useState(false);
   const [currency, setCurrency] = useState(user?.preferredCurrency || "USD");
   
-  // 👇 Theme Hooks
+  // Theme management
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Avoid hydration mismatch
+  // Wait for mount to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -42,20 +42,13 @@ export function SettingsForm({ user }: { user: any }) {
     setLoading(true);
     try {
       const result = await updateUserSettings({ preferredCurrency: currency });
-      
       if (result.success) {
-        toast.success("Settings Saved", {
-          description: "Your preferences have been updated.",
-        });
+        toast.success("Settings Saved");
       } else {
-        toast.error("Update Failed", {
-          description: "Could not save your changes. Please try again.",
-        });
+        toast.error("Update Failed");
       }
     } catch (error) {
-      toast.error("System Error", {
-        description: "An unexpected error occurred.",
-      });
+      toast.error("System Error");
     } finally {
       setLoading(false);
     }
@@ -66,12 +59,12 @@ export function SettingsForm({ user }: { user: any }) {
       <CardHeader>
         <CardTitle>Preferences</CardTitle>
         <CardDescription>
-          Customize appearance and financial defaults.
+          Customize your interface and defaults.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         
-        {/* 👇 THEME SETTING */}
+        {/* THEME TOGGLE */}
         <div className="grid gap-2">
           <Label htmlFor="theme">Appearance</Label>
           <div className="flex items-center gap-4">
@@ -103,12 +96,12 @@ export function SettingsForm({ user }: { user: any }) {
               </Select>
             </div>
             <p className="text-sm text-muted-foreground">
-              Select your preferred display mode.
+              Switch between Light and Dark mode.
             </p>
           </div>
         </div>
 
-        {/* CURRENCY SETTING */}
+        {/* CURRENCY TOGGLE */}
         <div className="grid gap-2">
           <Label htmlFor="currency">Preferred Currency</Label>
           <div className="flex items-center gap-4">
@@ -126,19 +119,12 @@ export function SettingsForm({ user }: { user: any }) {
                 </SelectContent>
               </Select>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Calculations will be based on this currency.
-            </p>
           </div>
         </div>
 
         <div className="flex items-center justify-end">
           <Button onClick={handleSave} disabled={loading} className="gap-2">
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save Changes
           </Button>
         </div>

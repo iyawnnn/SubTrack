@@ -7,8 +7,9 @@ import {
   Archive,
   Plus,
   CreditCard,
-  Search,
 } from "lucide-react";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import {
   CommandDialog,
@@ -50,7 +51,14 @@ export function GlobalSpotlight({ subscriptions }: { subscriptions: SimpleSub[] 
 
   return (
     <>
+      {/* Note: CommandDialog in Shadcn wraps a standard Dialog. 
+         We insert a hidden Title here to satisfy accessibility requirements.
+      */}
       <CommandDialog open={open} onOpenChange={setOpen}>
+        <VisuallyHidden>
+          <DialogTitle>Global Search</DialogTitle>
+        </VisuallyHidden>
+        
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>

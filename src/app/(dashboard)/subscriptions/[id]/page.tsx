@@ -1,11 +1,25 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import { Card, Group, Text, ThemeIcon, Grid, Badge, Title, Button, Stack, Container, SimpleGrid } from "@mantine/core";
-import { IconCalendar, IconCoin, IconClock, IconArrowLeft } from "@tabler/icons-react";
-import dayjs from "dayjs";
-import { formatCurrency } from "@/lib/currency-helper";
 import Link from "next/link";
+import dayjs from "dayjs";
+import { 
+  ArrowLeft, 
+  Calendar, 
+  Clock, 
+  Banknote, 
+  ExternalLink 
+} from "lucide-react";
+
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/currency-helper";
 
 export default async function SubscriptionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -30,116 +44,156 @@ export default async function SubscriptionDetailPage({ params }: { params: Promi
   const monthsActive = now.diff(start, 'month') + 1; 
   const lifetimeSpend = monthsActive * cost;
 
+  // Helper for status badge colors
+  const isTrial = sub.isTrial;
+  const isActive = sub.status === "ACTIVE";
+  
+  // Dynamic Badge Styles based on Light/Dark mode
+  let statusBadgeClass = "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"; // Default/Cancelled
+  if (isActive) statusBadgeClass = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800";
+  if (isTrial) statusBadgeClass = "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800";
+
   return (
-    <Container size="md" py="xl">
-       {/* Header */}
-       <Group mb={30}>
-          {/* 👇 FIX: Wrap Button in Link instead of using component={Link} */}
+    <div className="container mx-auto max-w-5xl py-10 px-4 sm:px-6">
+       {/* Header Navigation */}
+       <div className="mb-8">
           <Link href="/dashboard">
-            <Button 
-              variant="subtle" 
-              color="gray" 
-              leftSection={<IconArrowLeft size={16} />}
-              size="xs"
-              // Optional: Render as div to ensure valid HTML (<a> containing <div> instead of <button>)
-              component="div"
-            >
+            <Button variant="ghost" size="sm" className="gap-2 pl-0 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
           </Link>
-       </Group>
+       </div>
 
-       <Group justify="space-between" mb="xl">
+       {/* Title Section */}
+       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-10">
           <div>
-            <Title order={1} fw={800}>{sub.vendor.name}</Title>
-            <Text c="dimmed" size="lg">{sub.category}</Text>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              {sub.vendor.name}
+            </h1>
+            <p className="mt-1 text-lg text-muted-foreground">
+              {sub.category}
+            </p>
           </div>
           <Badge 
-            size="xl" 
-            radius="md" 
-            variant="light"
-            color={sub.status === "ACTIVE" ? "green" : "gray"}
+            variant="outline" 
+            className={`px-4 py-1.5 text-sm font-semibold border ${statusBadgeClass}`}
           >
-            {sub.status}
+            {isTrial ? "Trial Active" : sub.status}
           </Badge>
-       </Group>
+       </div>
 
-       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-          
-          <Card withBorder radius="md" p="xl" shadow="sm">
-            <Group justify="space-between" mb="xs">
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Monthly Cost</Text>
-              <ThemeIcon variant="light" color="blue" radius="md">
-                <IconCoin size={18} />
-              </ThemeIcon>
-            </Group>
-            <Text fw={800} size="xl" style={{ fontSize: 28 }}>
-              {formatCurrency(cost, sub.currency)}
-            </Text>
-            {Number(sub.splitCost) > 0 && (
-              <Badge mt="sm" variant="dot" color="blue">Split Cost Active</Badge>
-            )}
+       {/* Stats Grid */}
+       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-10">
+          {/* 1. Monthly Cost */}
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                Monthly Cost
+              </CardTitle>
+              <div className="rounded-md bg-blue-500/10 p-2 text-blue-600 dark:text-blue-400">
+                <Banknote className="h-5 w-5" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {formatCurrency(cost, sub.currency)}
+              </div>
+              {Number(sub.splitCost) > 0 && (
+                <Badge variant="secondary" className="mt-2 text-xs font-normal text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300">
+                  Split Cost Active
+                </Badge>
+              )}
+            </CardContent>
           </Card>
 
-          <Card withBorder radius="md" p="xl" shadow="sm">
-             <Group justify="space-between" mb="xs">
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Lifetime Spend</Text>
-              <ThemeIcon variant="light" color="violet" radius="md">
-                <IconClock size={18} />
-              </ThemeIcon>
-            </Group>
-            <Text fw={800} size="xl" style={{ fontSize: 28 }}>
-              {formatCurrency(lifetimeSpend, sub.currency)}
-            </Text>
-            <Text size="xs" c="dimmed" mt={4}>
-              Over {monthsActive} months
-            </Text>
+          {/* 2. Lifetime Spend */}
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                Lifetime Spend
+              </CardTitle>
+              <div className="rounded-md bg-violet-500/10 p-2 text-violet-600 dark:text-violet-400">
+                <Clock className="h-5 w-5" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {formatCurrency(lifetimeSpend, sub.currency)}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Over {monthsActive} months
+              </p>
+            </CardContent>
           </Card>
 
-           <Card withBorder radius="md" p="xl" shadow="sm">
-             <Group justify="space-between" mb="xs">
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Next Payment</Text>
-              <ThemeIcon variant="light" color="orange" radius="md">
-                <IconCalendar size={18} />
-              </ThemeIcon>
-            </Group>
-            <Text fw={800} size="xl" style={{ fontSize: 28 }}>
-              {dayjs(sub.nextRenewalDate).format("MMM D")}
-            </Text>
-             <Text size="xs" c="dimmed" mt={4}>
-              {dayjs(sub.nextRenewalDate).format("dddd")}
-            </Text>
+          {/* 3. Next Payment */}
+          <Card className="bg-card border-border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                Next Payment
+              </CardTitle>
+              <div className="rounded-md bg-orange-500/10 p-2 text-orange-600 dark:text-orange-400">
+                <Calendar className="h-5 w-5" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {dayjs(sub.nextRenewalDate).format("MMM D")}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {dayjs(sub.nextRenewalDate).format("dddd")}
+              </p>
+            </CardContent>
           </Card>
+       </div>
 
-       </SimpleGrid>
+       {/* Details Section */}
+       <Card className="bg-card border-border shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-foreground">Subscription Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
+               <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Start Date</span>
+                  <span className="text-lg font-medium text-foreground">
+                    {dayjs(sub.startDate).format("MMMM D, YYYY")}
+                  </span>
+               </div>
 
-       <Card withBorder radius="md" mt="lg" p="xl">
-          <Title order={4} mb="md">Subscription Details</Title>
-          <SimpleGrid cols={2}>
-             <Stack gap={4}>
-                <Text size="sm" c="dimmed">Start Date</Text>
-                <Text fw={500}>{dayjs(sub.startDate).format("MMMM D, YYYY")}</Text>
-             </Stack>
-             <Stack gap={4}>
-                <Text size="sm" c="dimmed">Website</Text>
-                {sub.vendor.website ? (
-                   <a href={sub.vendor.website} target="_blank" style={{ color: '#228be6' }}>
-                      Visit Site
-                   </a>
-                ) : (
-                   <Text c="dimmed">—</Text>
-                )}
-             </Stack>
-             <Stack gap={4}>
-                <Text size="sm" c="dimmed">Billing Cycle</Text>
-                <Text fw={500}>{sub.frequency}</Text>
-             </Stack>
-             <Stack gap={4}>
-                <Text size="sm" c="dimmed">Trial Status</Text>
-                <Text fw={500}>{sub.isTrial ? "Active Trial" : "Standard Plan"}</Text>
-             </Stack>
-          </SimpleGrid>
+               <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Website</span>
+                  {sub.vendor.website ? (
+                     <a 
+                        href={sub.vendor.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-lg font-medium text-primary hover:underline"
+                     >
+                        Visit Site <ExternalLink className="h-4 w-4" />
+                     </a>
+                  ) : (
+                     <span className="text-lg font-medium text-muted-foreground">—</span>
+                  )}
+               </div>
+
+               <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Billing Cycle</span>
+                  <span className="text-lg font-medium text-foreground capitalize">
+                    {sub.frequency.toLowerCase()}
+                  </span>
+               </div>
+
+               <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">Plan Type</span>
+                  <span className="text-lg font-medium text-foreground">
+                    {sub.isTrial ? "Free Trial" : "Standard Subscription"}
+                  </span>
+               </div>
+            </div>
+          </CardContent>
        </Card>
-    </Container>
+    </div>
   );
 }

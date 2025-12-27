@@ -1,88 +1,86 @@
 "use client";
 
-import * as React from "react";
-import { Pie, PieChart, Cell, ResponsiveContainer } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { convertTo, formatCurrency } from "@/lib/currency-helper";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency, convertTo } from "@/lib/currency-helper";
 
-interface CategoryChartProps {
-  subs: any[];
-  rates: any;
-  currency: string;
-}
+// Standard Chart Colors (Using CSS Variables)
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
-export function CategoryChart({ subs, rates, currency }: CategoryChartProps) {
-  // Aggregate costs by category
-  const categoryData = React.useMemo(() => {
-    const data: Record<string, number> = {};
-    subs.forEach((sub) => {
-      const costInBase = convertTo(sub.cost, sub.currency, currency, rates);
-      const monthlyCost = sub.frequency === "YEARLY" ? costInBase / 12 : costInBase;
-      data[sub.category] = (data[sub.category] || 0) + monthlyCost;
-    });
+export function CategoryChart({ subs, rates, currency }: { subs: any[], rates: any, currency: string }) {
+  // Aggregate data
+  const dataMap = subs.reduce((acc, sub) => {
+    const cost = convertTo(sub.cost, sub.currency, currency, rates);
+    acc[sub.category] = (acc[sub.category] || 0) + cost;
+    return acc;
+  }, {} as Record<string, number>);
 
-    return Object.entries(data).map(([name, value], index) => ({
-      name,
-      value,
-      fill: `var(--color-cat-${index + 1})`,
-    }));
-  }, [subs, rates, currency]);
+  const data = Object.entries(dataMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
-  // Dynamic config for colors
-  const chartConfig = React.useMemo(() => {
-    const config: ChartConfig = {
-      value: { label: "Monthly Cost" },
-    };
-    categoryData.forEach((item, index) => {
-      config[`cat-${index + 1}`] = {
-        label: item.name,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
-      };
-    });
-    return config;
-  }, [categoryData]);
+  if (data.length === 0) return null;
 
   return (
-    <Card className="flex flex-col border-border/50 bg-card/50">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Spending by Category</CardTitle>
-        <CardDescription>Monthly breakdown in {currency}</CardDescription>
+    <Card className="h-full bg-card border-border">
+      <CardHeader>
+        <CardTitle className="text-sm font-bold uppercase text-muted-foreground">
+          Top Categories
+        </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
-        >
-          <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Pie
-              data={categoryData}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={60}
-              strokeWidth={5}
-            >
-              {categoryData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ChartContainer>
+      <CardContent>
+        <div className="h-[200px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                stroke="none"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number) => formatCurrency(value, currency)}
+                contentStyle={{ 
+                    backgroundColor: "var(--card)", 
+                    borderColor: "var(--border)", 
+                    borderRadius: "8px",
+                    color: "var(--foreground)" 
+                }}
+                itemStyle={{ color: "var(--foreground)" }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-4 flex flex-col gap-2">
+          {data.slice(0, 3).map((item, index) => (
+            <div key={item.name} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <div 
+                    className="h-3 w-3 rounded-full" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }} 
+                />
+                <span className="text-muted-foreground">{item.name}</span>
+              </div>
+              <span className="font-medium text-foreground">
+                {formatCurrency(item.value, currency)}
+              </span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

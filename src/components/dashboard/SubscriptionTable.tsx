@@ -2,11 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { MoreHorizontal, Pencil, Archive, Info } from "lucide-react";
 import dayjs from "dayjs";
-import { toast } from "sonner"; // Using Sonner
-import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { MoreHorizontal, Pencil, Archive, Info } from "lucide-react";
 
 import {
   Table,
@@ -44,7 +42,6 @@ export function SubscriptionTable({
   rates: any,
   baseCurrency: string
 }) {
-  const router = useRouter();
   const [editingSub, setEditingSub] = useState<any | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -52,10 +49,7 @@ export function SubscriptionTable({
     try {
       const result = await archiveSubscription(id);
       if (result.success) {
-        toast.success("Subscription archived", {
-          description: "Moved to graveyard."
-        });
-        router.refresh();
+        toast.success("Subscription archived");
       } else {
         toast.error("Failed to archive");
       }
@@ -71,7 +65,7 @@ export function SubscriptionTable({
 
   if (data.length === 0) {
     return (
-      <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+      <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground">
         No subscriptions found
       </div>
     );
@@ -79,10 +73,10 @@ export function SubscriptionTable({
 
   return (
     <>
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border border-border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent border-border">
               <TableHead>Vendor</TableHead>
               <TableHead>Cost</TableHead>
               <TableHead>Next Renewal</TableHead>
@@ -91,105 +85,90 @@ export function SubscriptionTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            <AnimatePresence mode="popLayout">
-              {data.map((sub) => {
-                const now = dayjs().startOf('day');
-                const renewal = dayjs(sub.nextRenewalDate).startOf('day');
-                const daysLeft = renewal.diff(now, "day");
+            {data.map((sub) => {
+              const isDifferentCurrency = sub.currency !== baseCurrency;
+              const convertedCost = isDifferentCurrency
+                ? convertTo(sub.cost, sub.currency, baseCurrency, rates)
+                : null;
 
-                // Badge Logic
-                let badgeVariant: "default" | "secondary" | "destructive" | "outline" = "default";
-                let badgeLabel = "Active";
-                let badgeClass = "bg-green-500/15 text-green-700 dark:text-green-400 hover:bg-green-500/25";
+              const badgeVariant = sub.isTrial ? "secondary" : "outline";
 
-                if (sub.isTrial) {
-                   if (daysLeft < 0) {
-                      badgeLabel = "Expired";
-                      badgeClass = "bg-gray-500/15 text-gray-700 dark:text-gray-400";
-                   } else if (daysLeft <= 3) {
-                      badgeLabel = daysLeft === 0 ? "Expires Today" : `Expiring: ${daysLeft}d`;
-                      badgeVariant = "destructive";
-                      badgeClass = "";
-                   } else {
-                      badgeLabel = `Trial: ${daysLeft}d`;
-                      badgeClass = "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400";
-                   }
-                }
-
-                const isDifferentCurrency = sub.currency !== baseCurrency;
-                const convertedCost = isDifferentCurrency
-                  ? convertTo(sub.cost, sub.currency, baseCurrency, rates)
-                  : null;
-
-                return (
-                  <motion.tr
-                    key={sub.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-                  >
-                    <TableCell>
-                      <Link href={`/subscriptions/${sub.id}`} className="font-medium hover:underline block">
-                        {sub.vendor.name}
-                      </Link>
-                      <span className="text-xs text-muted-foreground">{sub.category}</span>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {formatCurrency(sub.cost, sub.currency)} / {sub.frequency === "MONTHLY" ? "mo" : "yr"}
-                        </span>
-                        {isDifferentCurrency && convertedCost && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            ≈ {formatCurrency(convertedCost, baseCurrency)}
+              return (
+                <TableRow
+                  key={sub.id}
+                  // 👇 FIX: Use hover:bg-muted/50 instead of white/5
+                  className="border-b border-border hover:bg-muted/50 transition-colors"
+                >
+                  <TableCell>
+                    {/* 👇 FIX: Use text-foreground instead of text-white */}
+                    <Link href={`/subscriptions/${sub.id}`} className="font-medium text-foreground hover:underline">
+                      {sub.vendor.name}
+                    </Link>
+                    <div className="text-xs text-muted-foreground">{sub.category}</div>
+                  </TableCell>
+                  
+                  <TableCell>
+                     <div className="flex flex-col">
+                       <span className="font-medium text-foreground">
+                         {formatCurrency(sub.cost, sub.currency)}
+                         <span className="text-xs text-muted-foreground ml-1 font-normal">/ {sub.frequency === "MONTHLY" ? "mo" : "yr"}</span>
+                       </span>
+                       
+                       {isDifferentCurrency && convertedCost && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                            <span>≈ {formatCurrency(convertedCost, baseCurrency)}</span>
                             <TooltipProvider>
                               <Tooltip>
-                                <TooltipTrigger><Info className="h-3 w-3 opacity-50" /></TooltipTrigger>
-                                <TooltipContent>Converted to {baseCurrency}</TooltipContent>
+                                <TooltipTrigger>
+                                  <Info className="h-3 w-3 opacity-50 hover:opacity-100" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Converted to {baseCurrency}
+                                </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                           </div>
-                        )}
-                      </div>
-                    </TableCell>
-
-                    <TableCell>{dayjs(sub.nextRenewalDate).format("MMM D, YYYY")}</TableCell>
-                    
-                    <TableCell>
-                      <Badge variant={badgeVariant} className={badgeClass}>{badgeLabel}</Badge>
-                    </TableCell>
-
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(sub)}>
-                            <Pencil className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleArchive(sub.id)} className="text-red-600 focus:text-red-600">
-                            <Archive className="mr-2 h-4 w-4" /> Archive
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </motion.tr>
-                );
-              })}
-            </AnimatePresence>
+                       )}
+                     </div>
+                  </TableCell>
+                  
+                  <TableCell className="text-muted-foreground">
+                      {dayjs(sub.nextRenewalDate).format("MMM D, YYYY")}
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Badge variant={badgeVariant}>
+                      {sub.isTrial ? "Trial" : "Active"}
+                    </Badge>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(sub)}>
+                          Edit Subscription
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleArchive(sub.id)} className="text-destructive focus:text-destructive">
+                          Archive
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
-
+      
       <SubscriptionModal
         opened={modalOpen}
-        close={() => { setModalOpen(false); setEditingSub(null); }}
+        close={() => setModalOpen(false)}
         subToEdit={editingSub}
       />
     </>

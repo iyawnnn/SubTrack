@@ -270,8 +270,21 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        // 👇 FIX 1: Allow future dates (removed date > new Date())
+                        disabled={(date) => date < new Date("1900-01-01")}
                         initialFocus
+                        // 👇 FIX 2: Enable Dropdowns for Year/Month to fix "Blocking"
+                        captionLayout="dropdown-buttons"
+                        fromYear={2010}
+                        toYear={new Date().getFullYear() + 5}
+                        // 👇 FIX 3: Make it Bigger
+                        className="p-3"
+                        classNames={{
+                          head_cell: "w-10 font-normal text-[0.8rem]",
+                          cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                          day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
+                          caption_label: "text-base font-medium",
+                        }}
                       />
                     </PopoverContent>
                   </Popover>

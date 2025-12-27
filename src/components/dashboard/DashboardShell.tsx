@@ -1,44 +1,84 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
   Archive, 
   Search, 
-  Menu, 
-  Command 
+  Sparkles,
+  AlignRight, 
+  CreditCard 
 } from "lucide-react";
+import { motion } from "framer-motion";
+
 import { UserMenu } from "./UserMenu";
 import { Button } from "@/components/ui/button";
 import { 
   Sheet, 
   SheetContent, 
-  SheetTrigger,
+  SheetTrigger, 
   SheetTitle,
-  SheetDescription 
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 export function DashboardShell({ children, user }: { children: React.ReactNode; user: any }) {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navLinks = [
     { link: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { link: "/subscriptions", label: "Subscriptions", icon: CreditCard },
     { link: "/archive", label: "Archive", icon: Archive },
   ];
 
+  const openSpotlight = () => {
+    const event = new KeyboardEvent("keydown", {
+      key: "k",
+      metaKey: true,
+      ctrlKey: true,
+      bubbles: true,
+    });
+    document.dispatchEvent(event);
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* SOLID HEADER - No transparency/glass effect */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-8">
+    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20">
+      
+      <header 
+        className={cn(
+          "sticky top-0 z-50 w-full transition-all duration-300",
+          "bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60",
+          scrolled ? "border-b border-border/40 shadow-sm" : "border-b border-transparent"
+        )}
+      >
+        {/* 👇 FIX: Consistent padding breakpoints (sm:px-6 lg:px-8) ensures perfect alignment */}
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           
-          <div className="flex items-center gap-8">
-            <span className="text-xl font-bold tracking-tight text-primary">SubTrack</span>
-            <nav className="hidden items-center gap-1 sm:flex">
+          {/* LEFT: Logo & Desktop Nav */}
+          <div className="flex items-center gap-4 lg:gap-8">
+            <Link href="/dashboard" className="flex items-center gap-2 group">
+              <div className="rounded-lg bg-primary/10 p-2 text-primary transition-colors group-hover:bg-primary/20">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-foreground">
+                SubTrack
+              </span>
+            </Link>
+
+            {/* 👇 FIX: Hidden on tablets (<1024px), Visible only on Large Desktop */}
+            <nav className="hidden items-center gap-1 lg:flex relative">
               {navLinks.map((item) => {
                 const isActive = pathname === item.link;
                 return (
@@ -46,59 +86,96 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
                     key={item.link}
                     href={item.link}
                     className={cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      isActive 
-                        ? "bg-primary/10 text-primary" 
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      "relative px-4 py-1.5 text-sm font-medium transition-colors z-10",
+                      isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        className="absolute inset-0 rounded-full bg-primary/10 -z-10"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    <div className="flex items-center gap-2">
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </div>
                   </Link>
                 );
               })}
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Search Trigger */}
-            <button className="hidden w-64 items-center justify-between rounded-md border border-input bg-secondary/50 px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground sm:flex">
+          {/* RIGHT: Search & Actions */}
+          <div className="flex items-center justify-end gap-2 sm:gap-4">
+            
+            {/* Search Bar - Only shows on Large screens */}
+            <button 
+              onClick={openSpotlight}
+              className="group hidden w-60 items-center justify-between rounded-full border border-border/50 bg-secondary/30 px-4 py-2 text-sm text-muted-foreground transition-all hover:bg-secondary/80 hover:border-border lg:flex"
+            >
               <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 opacity-50" />
-                <span>Search...</span>
+                <Search className="h-4 w-4 opacity-50 group-hover:opacity-100" />
+                <span className="opacity-70 group-hover:opacity-100">Search...</span>
               </div>
-              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-background/50 px-1.5 font-mono text-[10px] font-medium opacity-100 sm:inline-flex">
                 <span className="text-xs">⌘</span>K
               </kbd>
             </button>
 
+            {/* Mobile Search Icon - Shows on Tablets & Mobile */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={openSpotlight}
+              className="lg:hidden text-muted-foreground hover:text-foreground"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+
             <UserMenu image={user?.image} name={user?.name} email={user?.email} />
 
-            {/* Mobile Menu */}
+            {/* Mobile Menu Trigger - Shows on Tablets & Mobile (<1024px) */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="sm:hidden">
-                  <Menu className="h-5 w-5" />
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="lg:hidden text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <AlignRight className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="bg-background border-border">
-                <SheetTitle className="text-lg font-bold text-foreground">Navigation</SheetTitle>
-                <SheetDescription className="sr-only">
-                  Mobile navigation menu
-                </SheetDescription>
+              <SheetContent side="right" className="bg-background/95 backdrop-blur-2xl border-l border-border/50 w-[300px] sm:w-[400px]">
+                <SheetTitle className="flex items-center gap-2 text-lg font-bold text-foreground pb-4 border-b border-border/50">
+                   <div className="rounded-lg bg-primary/10 p-1.5 text-primary">
+                      <Sparkles className="h-4 w-4" />
+                   </div>
+                   Navigation
+                </SheetTitle>
+                <SheetDescription className="sr-only">Mobile navigation</SheetDescription>
                 
-                <div className="flex flex-col gap-4 mt-8">
-                  {navLinks.map((item) => (
-                    <Link
-                      key={item.link}
-                      href={item.link}
-                      onClick={() => setIsMobileOpen(false)}
-                      className="flex items-center gap-2 text-lg font-medium text-foreground hover:text-primary"
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.label}
-                    </Link>
-                  ))}
+                <div className="flex flex-col gap-2 mt-6">
+                  {navLinks.map((item) => {
+                     const isActive = pathname === item.link;
+                     return (
+                      <Link
+                        key={item.link}
+                        href={item.link}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200",
+                          isActive 
+                            ? "bg-primary/10 text-primary shadow-sm" 
+                            : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {item.label}
+                      </Link>
+                     );
+                  })}
                 </div>
               </SheetContent>
             </Sheet>
@@ -107,7 +184,8 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
       </header>
       
       <main className="flex-1">
-        <div className="container mx-auto px-4 py-8 sm:px-8">
+        {/* 👇 FIX: Matched padding with Header (px-4 sm:px-6 lg:px-8) */}
+        <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>

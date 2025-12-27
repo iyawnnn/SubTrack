@@ -1,105 +1,95 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { StatsSection, ChartsSection, TableSection, InsightsSection } from "@/components/dashboard/DashboardWidgets";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader"; // 👈 IMPORT THIS
-import { convertTo } from "@/lib/currency-helper";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { StatsGrid } from "@/components/dashboard/DashboardWidgets";
+import { SpendingChart } from "@/components/dashboard/SpendingChart";
+import { UpcomingBills } from "@/components/dashboard/UpcomingBills";
+import { SubscriptionCarousel } from "@/components/dashboard/SubscriptionCarousel";
+import { InsightsCard } from "@/components/dashboard/Insights";
 import { getLiveRates } from "@/lib/exchange-rates";
-import { getRedundancyInsights, getGraveyardStats, getCashFlowRunway } from "@/lib/intelligence";
-import dayjs from "dayjs";
+import { processSubscriptionData } from "@/lib/calculations";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 async function getData() {
   const session = await auth();
   if (!session?.user?.id) return { subs: [], user: null, rates: {} };
 
-  const [user, rates] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        subscriptions: {
-          where: { status: { not: "CANCELLED" } },
-          include: { vendor: true },
-          orderBy: { cost: "desc" },
-        },
-      },
-    }),
-    getLiveRates("USD"),
-  ]);
+  const rawSubs = await prisma.subscription.findMany({
+    where: { userId: session.user.id, status: "ACTIVE" },
+    include: { vendor: true },
+    orderBy: { cost: "desc" },
+  });
 
-  const subs = user?.subscriptions.map((sub) => {
-    return {
-      id: sub.id,
-      vendor: {
-        name: sub.vendor.name,
-        website: sub.vendor.website,
-      },
-      cost: Number(sub.cost), 
-      splitCost: sub.splitCost ? Number(sub.splitCost) : 0, 
-      currency: sub.currency,
-      frequency: sub.frequency,
-      startDate: sub.startDate,
-      nextRenewalDate: sub.nextRenewalDate,
-      isTrial: sub.isTrial,
-      category: sub.category,
-      status: sub.status,
-      userId: sub.userId,
-    };
-  }) || [];
+  const subs = rawSubs.map(sub => ({
+    ...sub,
+    cost: Number(sub.cost),
+    splitCost: sub.splitCost ? Number(sub.splitCost) : 0,
+  }));
 
-  return { subs, user, rates };
+  const rates = await getLiveRates();
+  return { subs, user: session.user, rates };
 }
 
 export default async function DashboardPage() {
   const { subs, user, rates } = await getData();
   const baseCurrency = user?.preferredCurrency || "USD";
   
-  // Logic Engine
-  const monthlyBurn = subs
-    .filter((s) => s.status === "ACTIVE")
-    .reduce((acc, sub) => {
-      const finalCost = sub.splitCost > 0 ? sub.splitCost : sub.cost;
-      const costInBase = convertTo(finalCost, sub.currency, baseCurrency, rates);
-      return acc + (sub.frequency === "YEARLY" ? costInBase / 12 : costInBase);
-    }, 0);
-
-  const annualProjection = monthlyBurn * 12;
-  const activeTrials = subs.filter(
-    (s) => s.isTrial && dayjs(s.nextRenewalDate).diff(dayjs(), "day") >= 0
-  ).length;
-
-  const redundancyInsights = getRedundancyInsights(subs);
-  const graveyardStats = getGraveyardStats(subs, rates, baseCurrency);
-  const runwayStats = getCashFlowRunway(subs, rates, baseCurrency);
-
-  const statsProps = {
-    monthlyBurn,
-    annualProjection,
-    activeTrials,
-    totalSaved: graveyardStats.totalSavedMonthly,
-    currency: baseCurrency,
-    subs: [],
-  };
+  const { 
+    monthlyBurn, 
+    annualProjection, 
+    activeTrials, 
+    graveyardStats, 
+    redundancyInsights, 
+  } = processSubscriptionData(subs, rates, baseCurrency);
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", paddingBottom: 40 }}>
+    // 👇 FIX: Added 'overflow-x-hidden' to prevent horizontal scroll
+    <div className="mx-auto max-w-[1600px] space-y-6 animate-in fade-in duration-500 pb-10 overflow-x-hidden">
       
-      {/* 👇 REPLACED: The interactive Header is back */}
-      <DashboardHeader />
+      {/* Pass the 'user' object here for the name & greeting */}
+      <DashboardHeader user={user} />
 
-      <StatsSection {...statsProps} subs={subs} />
-
-      <InsightsSection 
-        redundancy={redundancyInsights} 
-        runway={runwayStats} 
-        currency={baseCurrency} 
-      />
-
-      <div style={{ marginTop: 40, minHeight: 400 }}>
-         <ChartsSection subs={subs} rates={rates} currency={baseCurrency} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsGrid 
+          monthlyBurn={monthlyBurn} 
+          annualProjection={annualProjection} 
+          activeTrials={activeTrials} 
+          totalSaved={graveyardStats.totalSavedMonthly} 
+          currency={baseCurrency} 
+        />
       </div>
 
-      <div style={{ marginTop: 40 }}>
-        <TableSection subs={subs} rates={rates} currency={baseCurrency} />
+      {redundancyInsights.length > 0 && (
+         <div className="w-full animate-in slide-in-from-top-2">
+            <InsightsCard redundancies={redundancyInsights} currency={baseCurrency} />
+         </div>
+      )}
+
+      {/* Fixed height row for Chart & Upcoming Bills */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 xl:grid-cols-4 lg:h-[320px]">
+        
+        {/* Main Chart */}
+        <div className="lg:col-span-2 xl:col-span-3 h-[320px] lg:h-full">
+           <Card className="h-full border-border bg-card shadow-sm flex flex-col">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-bold">Spending Velocity</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 min-h-0">
+                 <SpendingChart data={subs} />
+              </CardContent>
+           </Card>
+        </div>
+
+        {/* Side Widget */}
+        <div className="lg:col-span-1 xl:col-span-1 h-auto lg:h-full">
+           <UpcomingBills data={subs} rates={rates} currency={baseCurrency} />
+        </div>
       </div>
+
+      <div className="pt-5">
+         <SubscriptionCarousel data={subs} currency={baseCurrency} rates={rates} />
+      </div>
+
     </div>
   );
 }

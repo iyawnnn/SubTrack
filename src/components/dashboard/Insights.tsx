@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import { formatCurrency } from "@/lib/currency-helper";
 import { cn } from "@/lib/utils";
@@ -17,17 +17,17 @@ export function InsightsCard({
   const isVendorDup = alert.type === "DUPLICATE_VENDOR";
 
   return (
-    <Card className="h-full border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-950/10">
+    <Card className="h-full border-destructive/50 bg-destructive/5">
       <CardContent className="pt-6">
         <div className="flex items-start gap-4">
-          <div className="rounded-lg bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+          <div className="rounded-lg bg-destructive/10 p-3 text-destructive shadow-sm">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+            <p className="text-xs font-bold uppercase tracking-wider text-destructive">
               Attention Needed
             </p>
-            <h3 className="text-lg font-bold">
+            <h3 className="text-lg font-bold text-foreground">
               {isVendorDup ? "Duplicate Subscriptions" : "Category Overload"}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -38,13 +38,13 @@ export function InsightsCard({
 
         <div className="mt-6 flex flex-col gap-2">
           {alert.vendors.map((vendor: string, i: number) => (
-            <div key={i} className="flex items-center justify-between rounded-md border bg-background px-3 py-2 text-sm font-medium">
+            <div key={i} className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-sm font-medium shadow-sm text-foreground">
                {vendor}
             </div>
           ))}
         </div>
 
-        <div className="mt-6 text-sm font-bold text-red-600 dark:text-red-400">
+        <div className="mt-6 text-sm font-bold text-destructive">
           Potential Savings: {formatCurrency(alert.totalCost, currency)} / mo
         </div>
       </CardContent>
@@ -97,32 +97,32 @@ export function ForecastWidget({
   currency: string 
 }) {
   return (
-    <Card className="h-full">
+    <Card className="h-full bg-card border-border">
       <CardContent className="pt-6">
         <div className="mb-6 flex items-center gap-4">
-          <div className="rounded-lg bg-violet-100 p-3 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+          <div className="rounded-lg bg-primary/10 p-3 text-primary shadow-sm">
             <Lightbulb className="h-6 w-6" />
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               3-Month Forecast
             </p>
-            <h3 className="text-lg font-bold">Cash Flow Runway</h3>
+            <h3 className="text-lg font-bold text-foreground">Cash Flow Runway</h3>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
           <div className="flex flex-col items-center gap-1">
             <CircleProgress value={33} label="30 Days" colorClass="text-blue-500" />
-            <span className="text-sm font-bold">{formatCurrency(d30, currency)}</span>
+            <span className="text-sm font-bold text-foreground">{formatCurrency(d30, currency)}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <CircleProgress value={66} label="60 Days" colorClass="text-violet-500" />
-            <span className="text-sm font-bold">{formatCurrency(d60, currency)}</span>
+            <span className="text-sm font-bold text-foreground">{formatCurrency(d60, currency)}</span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <CircleProgress value={100} label="90 Days" colorClass="text-purple-500" />
-            <span className="text-sm font-bold">{formatCurrency(d90, currency)}</span>
+            <span className="text-sm font-bold text-foreground">{formatCurrency(d90, currency)}</span>
           </div>
         </div>
       </CardContent>

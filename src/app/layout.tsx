@@ -22,14 +22,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // 👇 1. Add suppressHydrationWarning
-    <html lang="en" className="dark" suppressHydrationWarning>
+    // 👇 FIX: Removed className="dark" so the theme provider controls it
+    <html lang="en" suppressHydrationWarning>
       <body className={`${satoshi.variable} font-satoshi antialiased bg-background text-foreground`}>
         <SessionProvider>
-          {/* 👇 2. Add ThemeProvider with defaultTheme="dark" */}
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
