@@ -11,6 +11,7 @@ import { processSubscriptionData } from "@/lib/calculations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { OnboardingFlow } from "@/components/dashboard/OnboardingFlow"; // 👈 Import
 
 // 👇 ADDED: Page Metadata
 export const metadata = {
@@ -58,6 +59,11 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-[1600px] space-y-6 animate-in fade-in duration-500 pb-0 overflow-x-hidden">
       
+      {/* 👇 SHOW ONBOARDING IF NEW USER */}
+      {user && !user.hasCompletedOnboarding && (
+         <OnboardingFlow isOpen={true} />
+      )}
+
       <DashboardHeader user={user} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

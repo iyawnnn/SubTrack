@@ -1,33 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+// Removed unused Alert imports to use a cleaner custom div
+// import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Check if you have this action. If not, ensure you create it or use your existing registration logic.
-import { register } from "@/actions/auth-actions"; 
+import { register } from "@/actions/auth-actions";
 
-// Form Validation Schema
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
@@ -43,6 +33,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // 👁️ Password Visibility States
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    document.title = "Sign Up | SubTrack";
+  }, []);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -59,7 +57,6 @@ export default function SignupPage() {
     setError("");
 
     try {
-      // Assuming 'register' is your server action for creating a user
       const result = await register(values);
 
       if (result.success) {
@@ -89,137 +86,232 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md border-border bg-card text-card-foreground shadow-xl">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            Create an account
-          </CardTitle>
-          <CardDescription>
-            Enter your details below to get started
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* Google Button */}
-          <Button 
-            variant="outline" 
-            className="w-full gap-2 bg-white text-black hover:bg-gray-100 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-            onClick={handleGoogleLogin}
-            disabled={googleLoading || loading}
-          >
-            {googleLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <GoogleIcon className="h-4 w-4" />
-            )}
-            Sign up with Google
-          </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
+    <div className="w-full min-h-screen lg:grid lg:grid-cols-2 bg-[#050505] text-white font-satoshi">
+      
+      {/* 🖼️ LEFT SIDE: Premium Visuals */}
+      <div className="hidden bg-black lg:flex relative overflow-hidden flex-col justify-between p-12 border-r border-white/5">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_-20%,_#3b82f6_0%,_transparent_40%)] opacity-20" />
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,_#6366f1_0%,_transparent_40%)] opacity-20" />
+        
+        <div className="relative z-10 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-blue-600 shadow-lg shadow-primary/20">
+               <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 text-white" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" className="opacity-50" />
+                  <path d="M8 11h8" />
+                  <path d="M8 15h8" />
+                  <path d="M12 7v1" />
+               </svg>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with email
-              </span>
-            </div>
+            <span className="text-xl font-bold tracking-tight">SubTrack</span>
+        </div>
+
+        <div className="relative z-10 max-w-lg">
+           <h2 className="text-4xl font-extrabold tracking-tight mb-6 leading-tight">
+             Start your journey to <br />
+             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
+               financial clarity.
+             </span>
+           </h2>
+           <div className="space-y-4 text-muted-foreground">
+             <div className="flex items-center gap-3">
+               <CheckCircle2 className="h-5 w-5 text-primary" />
+               <span>Join thousands of smart spenders</span>
+             </div>
+             <div className="flex items-center gap-3">
+               <CheckCircle2 className="h-5 w-5 text-primary" />
+               <span>Stop wasting money on unused apps</span>
+             </div>
+             <div className="flex items-center gap-3">
+               <CheckCircle2 className="h-5 w-5 text-primary" />
+               <span>100% free for individual use</span>
+             </div>
+           </div>
+        </div>
+
+        <div className="relative z-10 text-sm text-muted-foreground/60">
+           © {new Date().getFullYear()} SubTrack Inc. All rights reserved.
+        </div>
+      </div>
+
+      {/* 📝 RIGHT SIDE: Signup Form */}
+      <div className="relative flex items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 py-12">
+        <div className="absolute inset-0 bg-primary/5 lg:hidden pointer-events-none blur-3xl" />
+
+        <Link 
+          href="/" 
+          className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors group cursor-pointer z-50"
+        >
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="hidden sm:inline">Back to website</span>
+          <span className="sm:hidden">Back</span>
+        </Link>
+
+        <div className="mx-auto w-full max-w-[380px] space-y-6 relative z-10">
+          
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-3xl font-bold tracking-tight text-white">Create an account</h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your details below to get started
+            </p>
           </div>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                placeholder="John Doe"
-                disabled={loading}
-                {...form.register("name")}
-              />
-              {form.formState.errors.name && (
-                <p className="text-xs text-red-500">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                disabled={loading}
-                {...form.register("email")}
-              />
-              {form.formState.errors.email && (
-                <p className="text-xs text-red-500">
-                  {form.formState.errors.email.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                disabled={loading}
-                {...form.register("password")}
-              />
-              {form.formState.errors.password && (
-                <p className="text-xs text-red-500">
-                  {form.formState.errors.password.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                disabled={loading}
-                {...form.register("confirmPassword")}
-              />
-              {form.formState.errors.confirmPassword && (
-                <p className="text-xs text-red-500">
-                  {form.formState.errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Account
-            </Button>
-          </form>
-        </CardContent>
-
-        <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="font-medium text-primary hover:underline"
+          <div className="grid gap-6">
+            <Button 
+              variant="outline" 
+              className="w-full h-11 gap-3 bg-white/5 text-white border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20 font-medium cursor-pointer transition-all active:scale-[0.98]"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading || loading}
             >
-              Log in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+              {googleLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <GoogleIcon className="h-5 w-5" />
+              )}
+              Sign up with Google
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[#050505] px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            {/* 👇 FIX: Replaced Alert component with a custom Flexbox div for perfect alignment */}
+            {error && (
+              <div className="flex items-center gap-3 rounded-lg border border-red-900/20 bg-red-900/10 p-3 text-sm text-red-400">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <p className="font-medium">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-white">Full Name</Label>
+                <Input
+                  id="name"
+                  placeholder="John Doe"
+                  disabled={loading}
+                  className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11"
+                  {...form.register("name")}
+                />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-red-400">
+                    {form.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-white">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  disabled={loading}
+                  className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11"
+                  {...form.register("email")}
+                />
+                {form.formState.errors.email && (
+                  <p className="text-xs text-red-400">
+                    {form.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              {/* 🔒 Password Field with Toggle */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-white">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    disabled={loading}
+                    className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
+                    {...form.register("password")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                {form.formState.errors.password && (
+                  <p className="text-xs text-red-400">
+                    {form.formState.errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              {/* 🔒 Confirm Password Field with Toggle */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    disabled={loading}
+                    className="bg-white/5 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-white placeholder:text-white/20 h-11 pr-10"
+                    {...form.register("confirmPassword")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors cursor-pointer"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                {form.formState.errors.confirmPassword && (
+                  <p className="text-xs text-red-400">
+                    {form.formState.errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]" 
+                disabled={loading}
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Account
+              </Button>
+            </form>
+
+            <p className="px-8 text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                href="/auth/login"
+                className="hover:text-primary underline underline-offset-4 cursor-pointer transition-colors"
+              >
+                Log in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Reusable Google Icon
+// Simple Google Icon Component
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" {...props}>

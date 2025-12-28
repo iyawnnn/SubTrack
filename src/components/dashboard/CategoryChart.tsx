@@ -22,7 +22,8 @@ export function CategoryChart({ subs, rates, currency }: { subs: any[], rates: a
   }, {} as Record<string, number>);
 
   const data = Object.entries(dataMap)
-    .map(([name, value]) => ({ name, value }))
+    // 👇 FIX: Explicitly ensure 'value' is treated as a number
+    .map(([name, value]) => ({ name, value: Number(value) }))
     .sort((a, b) => b.value - a.value);
 
   if (data.length === 0) return null;

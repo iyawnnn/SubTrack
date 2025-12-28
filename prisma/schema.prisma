@@ -23,9 +23,14 @@ model User {
   sessions      Session[]
   subscriptions Subscription[]
   vendors       Vendor[]
-  circles       UserCircle[] // 👈 NEW: Many-to-Many relation to Circles
+  circles       UserCircle[] 
   
   preferredCurrency String @default("USD")
+
+  // 👇 NEW: Onboarding Flags
+  hasCompletedOnboarding Boolean @default(false)
+  emailNotifications     Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -114,7 +119,6 @@ model Subscription {
   splitCost       Decimal  @default(0) @db.Decimal(10, 2)
   currency        String   @default("USD")
   
-  // 👇 FIX 1: Use the Enum, not String
   frequency       BillingFrequency 
 
   startDate       DateTime
@@ -122,7 +126,6 @@ model Subscription {
   isTrial         Boolean  @default(false)
   category        String   @default("Uncategorized")
   
-  // 👇 FIX 2: Use the Enum here too (It's safer)
   status          SubStatus @default(ACTIVE) 
   
   createdAt       DateTime @default(now())
@@ -132,7 +135,7 @@ model Subscription {
   vendor Vendor @relation(fields: [vendorId], references: [id])
 }
 
-// --- 👈 NEW: Collaborative Models ---
+// --- Collaborative Models ---
 
 model Circle {
   id          String       @id @default(cuid())
@@ -153,5 +156,5 @@ model UserCircle {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   circle    Circle     @relation(fields: [circleId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, circleId]) // Prevent adding same user to circle twice
+  @@unique([userId, circleId]) 
 }

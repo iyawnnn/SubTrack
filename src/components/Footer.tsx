@@ -2,14 +2,21 @@
 
 import React from "react";
 import { Sparkles } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+  const pathname = usePathname();
+
+  // 👇 Hide Footer on Auth pages
+  if (pathname?.startsWith("/auth")) {
+    return null;
+  }
+
   return (
     <footer className="relative border-t border-border/40 bg-background/80 backdrop-blur-xl">
        {/* Stylish Top Gradient Line */}
        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
 
-      {/* 👇 FIX: Added 'px-4 sm:px-6 lg:px-8' to match DashboardShell exactly */}
       <div className="container mx-auto flex flex-col items-center justify-between gap-3 py-6 px-4 sm:px-6 lg:px-8 md:h-16 md:flex-row md:py-0">
         
         {/* Left: Copyright */}

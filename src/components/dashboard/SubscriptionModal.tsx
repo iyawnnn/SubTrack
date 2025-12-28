@@ -56,9 +56,9 @@ const formSchema = z.object({
   cost: z.coerce.number().min(0),
   splitCost: z.coerce.number().min(0).optional(),
   currency: z.string(),
-  frequency: z.string(),
+  frequency: z.enum(["MONTHLY", "YEARLY"]),
   category: z.string(),
-  status: z.string(),
+  status: z.enum(["ACTIVE", "PAUSED", "CANCELLED"]),
   startDate: z.date(),
   isTrial: z.boolean().default(false),
 });
@@ -68,7 +68,7 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
   const [loading, setLoading] = React.useState(false);
   const [showAdvanced, setShowAdvanced] = React.useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vendorName: "",
@@ -85,6 +85,7 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
 
   React.useEffect(() => {
     if (subToEdit) {
+      // @ts-ignore
       form.reset({
         vendorName: subToEdit.vendor.name,
         cost: Number(subToEdit.cost),
@@ -100,6 +101,7 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
         setShowAdvanced(true);
       }
     } else {
+      // @ts-ignore
       form.reset({
         vendorName: "",
         cost: 0,
@@ -117,8 +119,13 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
-    // Map 'vendorName' to 'name' for the backend
-    const payload = { ...values, name: values.vendorName };
+    const payload = { 
+      ...values, 
+      name: values.vendorName,
+      frequency: values.frequency as "MONTHLY" | "YEARLY",
+      status: values.status as "ACTIVE" | "PAUSED" | "CANCELLED"
+    };
+
     try {
       const result = subToEdit 
         ? await updateSubscription(subToEdit.id, payload)
@@ -127,7 +134,7 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
       if (result.success) {
         toast.success(subToEdit ? "Subscription Updated" : "Subscription Added");
         close();
-        router.refresh(); // Refreshes the server components (dashboard data)
+        router.refresh(); 
       } else {
         toast.error("Error", { description: typeof result.message === "string" ? result.message : "Failed to save." });
       }
@@ -140,10 +147,8 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
 
   return (
     <Dialog open={opened} onOpenChange={(val) => !val && close()}>
-      {/* 👇 FIX: Mobile Responsive Classes (w-[90vw], max-h-[85vh]) */}
       <DialogContent className="w-[90vw] sm:max-w-[420px] max-h-[85vh] overflow-y-auto bg-card border-border shadow-2xl p-0 gap-0">
         
-        {/* Header */}
         <DialogHeader className="p-6 pb-2 border-b border-border/40">
           <DialogTitle className="flex items-center gap-2 text-xl">
             {subToEdit ? <Sparkles className="h-5 w-5 text-primary" /> : <CreditCard className="h-5 w-5 text-primary" />}
@@ -151,12 +156,11 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
           </DialogTitle>
         </DialogHeader>
 
-        {/* Scrollable Form Body */}
         <div className="p-6 pt-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               
-              {/* 1. HERO INPUT: VENDOR NAME */}
+              {/* 1. VENDOR NAME */}
               <FormField
                 control={form.control}
                 name="vendorName"
@@ -176,7 +180,7 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
                 )}
               />
 
-              {/* 2. THE 'MONEY' ROW: Cost | Currency | Frequency */}
+              {/* 2. COST ROW */}
               <div className="flex gap-3">
                 <div className="flex-[2]">
                   <FormField
@@ -190,7 +194,8 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
                             <Input 
                               type="number" 
                               step="0.01" 
-                              {...field} 
+                              {...field}
+                              value={field.value as number}
                               className="border-0 focus-visible:ring-0 shadow-none h-10 rounded-r-none pr-1 bg-transparent"
                               placeholder="0.00"
                             />
@@ -244,16 +249,16 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
                 </div>
               </div>
 
-              {/* 3. DETAILS ROW: Category | Start Date */}
+              {/* 3. DETAILS ROW */}
               <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                         <FormLabel className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                          <FormLabel className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                             Category
-                         </FormLabel>
+                          </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="bg-background/50 border-input h-10">
@@ -299,7 +304,8 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
                               selected={field.value}
                               onSelect={field.onChange}
                               disabled={(date) => date < new Date("1900-01-01")}
-                              captionLayout="dropdown-buttons"
+                              // 👇 FIX: Changed "dropdown-buttons" to "dropdown"
+                              captionLayout="dropdown"
                               fromYear={2010}
                               toYear={new Date().getFullYear() + 5}
                               initialFocus
@@ -323,7 +329,6 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
                   {showAdvanced ? "Hide Advanced Options" : "More Options (Trial, Split Cost)"}
                 </button>
 
-                {/* HIDDEN ADVANCED SECTION */}
                 {showAdvanced && (
                   <div className="mt-3 space-y-4 rounded-lg border border-border/50 bg-secondary/20 p-4 animate-in slide-in-from-top-2 fade-in duration-200">
                     <div className="grid grid-cols-2 gap-4">
@@ -333,7 +338,16 @@ export function SubscriptionModal({ opened, close, subToEdit }: { opened: boolea
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xs">My Share (If Split)</FormLabel>
-                            <FormControl><Input type="number" step="0.01" {...field} className="bg-background h-9 border-input" placeholder="0.00" /></FormControl>
+                            <FormControl>
+                                <Input 
+                                    type="number" 
+                                    step="0.01" 
+                                    {...field} 
+                                    value={field.value as number}
+                                    className="bg-background h-9 border-input" 
+                                    placeholder="0.00" 
+                                />
+                            </FormControl>
                           </FormItem>
                         )}
                       />

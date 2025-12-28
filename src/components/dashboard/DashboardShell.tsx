@@ -7,7 +7,6 @@ import {
   LayoutDashboard, 
   Archive, 
   Search, 
-  Sparkles,
   AlignRight, 
   CreditCard 
 } from "lucide-react";
@@ -68,8 +67,14 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
           {/* LEFT: Logo & Desktop Nav */}
           <div className="flex items-center gap-4 lg:gap-8">
             <Link href="/dashboard" className="flex items-center gap-2 group">
-              <div className="rounded-lg bg-primary/10 p-2 text-primary transition-colors group-hover:bg-primary/20">
-                <Sparkles className="h-5 w-5" />
+              {/* 👇 FIX: Updated Icon to match Landing/Auth pages */}
+              <div className="rounded-lg bg-gradient-to-tr from-primary to-blue-600 p-2 text-white shadow-lg shadow-primary/20 transition-all group-hover:shadow-primary/40 group-hover:scale-105">
+                 <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" className="opacity-70" />
+                    <path d="M8 11h8" />
+                    <path d="M8 15h8" />
+                    <path d="M12 7v1" />
+                 </svg>
               </div>
               <span className="text-xl font-bold tracking-tight text-foreground">
                 SubTrack
@@ -109,7 +114,6 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
           <div className="flex items-center justify-end gap-2 sm:gap-4">
             
             {/* Search Bar - Only shows on Large screens */}
-            {/* 👇 FIX: Added 'cursor-pointer' to the button class */}
             <button 
               onClick={openSpotlight}
               className="group hidden w-60 items-center justify-between rounded-full border border-border/50 bg-secondary/30 px-4 py-2 text-sm text-muted-foreground transition-all hover:bg-secondary/80 hover:border-border lg:flex cursor-pointer"
@@ -118,8 +122,9 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
                 <Search className="h-4 w-4 opacity-50 group-hover:opacity-100" />
                 <span className="opacity-70 group-hover:opacity-100">Search...</span>
               </div>
-              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-background/50 px-1.5 font-mono text-[10px] font-medium opacity-100 sm:inline-flex">
-                <span className="text-xs">⌘</span>K
+              {/* 👇 FIX: Improved alignment of Command+K */}
+              <kbd className="pointer-events-none hidden h-5 select-none items-center justify-center gap-1 rounded border border-border bg-background/50 px-1.5 font-mono text-[10px] font-medium opacity-100 sm:inline-flex">
+                <span className="text-xs relative top-[1px]">⌘</span>K
               </kbd>
             </button>
 
@@ -148,8 +153,14 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
               </SheetTrigger>
               <SheetContent side="right" className="bg-background/95 backdrop-blur-2xl border-l border-border/50 w-[300px] sm:w-[400px]">
                 <SheetTitle className="flex items-center gap-2 text-lg font-bold text-foreground pb-4 border-b border-border/50">
-                   <div className="rounded-lg bg-primary/10 p-1.5 text-primary">
-                      <Sparkles className="h-4 w-4" />
+                   {/* Mobile Menu Icon */}
+                   <div className="rounded-lg bg-gradient-to-tr from-primary to-blue-600 p-1.5 text-white shadow-md">
+                      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" className="opacity-70" />
+                        <path d="M8 11h8" />
+                        <path d="M8 15h8" />
+                        <path d="M12 7v1" />
+                      </svg>
                    </div>
                    Navigation
                 </SheetTitle>
@@ -159,20 +170,20 @@ export function DashboardShell({ children, user }: { children: React.ReactNode; 
                   {navLinks.map((item) => {
                       const isActive = pathname === item.link;
                       return (
-                       <Link
-                         key={item.link}
-                         href={item.link}
-                         onClick={() => setIsMobileOpen(false)}
-                         className={cn(
-                           "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200",
-                           isActive 
-                             ? "bg-primary/10 text-primary shadow-sm" 
-                             : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                         )}
-                       >
-                         <item.icon className="h-5 w-5" />
-                         {item.label}
-                       </Link>
+                        <Link
+                          key={item.link}
+                          href={item.link}
+                          onClick={() => setIsMobileOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200",
+                            isActive 
+                              ? "bg-primary/10 text-primary shadow-sm" 
+                              : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          <item.icon className="h-5 w-5" />
+                          {item.label}
+                        </Link>
                       );
                   })}
                 </div>
