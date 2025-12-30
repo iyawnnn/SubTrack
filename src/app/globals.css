@@ -160,4 +160,9 @@
     font-family: var(--font-satoshi);
     @apply antialiased;
   }
+
+  a,
+  button {
+    cursor: pointer;
+  }
 }

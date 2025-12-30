@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import {
@@ -31,8 +31,11 @@ export function UserMenu({ image, name, email }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {/* 👇 FIX: Added 'cursor-pointer' to ensure the hand icon appears on hover */}
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full cursor-pointer">
+        <Button 
+          variant="ghost" 
+          className="relative h-9 w-9 rounded-full cursor-pointer"
+          suppressHydrationWarning
+        >
           <Avatar className="h-9 w-9 border border-border">
             <AvatarImage src={image || ""} alt={name || "User"} />
             <AvatarFallback>{initials}</AvatarFallback>
@@ -55,7 +58,11 @@ export function UserMenu({ image, name, email }: UserMenuProps) {
             <span>Settings</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10">
+        {/* 👇 FIX: Add callbackUrl to signOut */}
+        <DropdownMenuItem 
+          onClick={() => signOut({ callbackUrl: "/auth/login" })} 
+          className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

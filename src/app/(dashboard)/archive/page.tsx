@@ -7,36 +7,37 @@ export const metadata = {
   title: "Archive | SubTrack",
 };
 
-async function getData() {
-  const session = await auth();
-  if (!session?.user?.id) return [];
-
-  const rawSubs = await prisma.subscription.findMany({
-    where: { 
-      userId: session.user.id,
-      status: "CANCELLED"
-    }, 
-    include: { vendor: true },
-    orderBy: { updatedAt: "desc" },
-  });
-
-  return rawSubs.map(sub => ({
-    ...sub,
-    cost: Number(sub.cost),
-    // 👇 FIX: Explicitly convert Decimal to Number
-    splitCost: sub.splitCost ? Number(sub.splitCost) : 0, 
-  }));
-}
-
 export default async function ArchivePage() {
   const session = await auth();
-  if (!session?.user) redirect("/");
+  if (!session?.user?.id) redirect("/");
 
-  const subs = await getData();
+  // ✅ PARALLEL FETCH: Fetch User (for currency) and Archived Subs together
+  const [user, rawSubs] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { preferredCurrency: true }
+    }),
+    prisma.subscription.findMany({
+      where: { 
+        userId: session.user.id,
+        status: "CANCELLED"
+      }, 
+      include: { vendor: true },
+      orderBy: { updatedAt: "desc" },
+    })
+  ]);
+
+  const subs = rawSubs.map(sub => ({
+    ...sub,
+    cost: Number(sub.cost),
+    splitCost: sub.splitCost ? Number(sub.splitCost) : 0, 
+  }));
+
+  const baseCurrency = user?.preferredCurrency || "USD";
 
   return (
     <div className="mx-auto max-w-[1600px] pb-0">
-      <ArchiveView initialData={subs} />
+      <ArchiveView initialData={subs} currency={baseCurrency} />
     </div>
   );
 }

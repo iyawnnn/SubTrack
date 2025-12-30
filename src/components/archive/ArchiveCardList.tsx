@@ -67,7 +67,7 @@ export function ArchiveCardList({ data, onRestore, onDelete }: ArchiveCardListPr
                   {sub.status}
                 </Badge>
                 <p className="text-xs text-muted-foreground whitespace-nowrap">
-                  Ended {sub.endDate ? dayjs(sub.endDate).format("MMM D, YYYY") : "-"}
+                  Ended {sub.updatedAt ? dayjs(sub.updatedAt).format("MMM D, YYYY") : "-"}
                 </p>
               </div>
             </div>

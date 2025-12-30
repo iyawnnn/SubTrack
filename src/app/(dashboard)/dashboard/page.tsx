@@ -9,116 +9,127 @@ import { InsightsCard } from "@/components/dashboard/Insights";
 import { getLiveRates } from "@/lib/exchange-rates";
 import { processSubscriptionData } from "@/lib/calculations";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
-import { OnboardingFlow } from "@/components/dashboard/OnboardingFlow"; // 👈 Import
+import { OnboardingFlow } from "@/components/dashboard/OnboardingFlow";
 
-// 👇 ADDED: Page Metadata
 export const metadata = {
   title: "Dashboard | SubTrack",
   description: "Your financial pulse at a glance.",
 };
 
-async function getData() {
+export default async function DashboardPage() {
   const session = await auth();
-  if (!session?.user?.id) return { subs: [], user: null, rates: {} };
+  if (!session?.user?.id) return null;
 
-  // Fetch fresh user data (ensures currency setting is up-to-date)
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
+  // ✅ PARALLEL FETCH: Fetch User and Subscriptions at the same time
+  const [user, rawSubs] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+    }),
+    prisma.subscription.findMany({
+      where: { userId: session.user.id, status: "ACTIVE" },
+      include: { vendor: true },
+      orderBy: { cost: "desc" },
+    }),
+  ]);
 
-  const rawSubs = await prisma.subscription.findMany({
-    where: { userId: session.user.id, status: "ACTIVE" },
-    include: { vendor: true },
-    orderBy: { cost: "desc" },
-  });
+  const baseCurrency = user?.preferredCurrency || "USD";
 
-  const subs = rawSubs.map(sub => ({
+  // Fetch rates based on the fetched user currency
+  const rates = await getLiveRates(baseCurrency);
+
+  const subs = rawSubs.map((sub) => ({
     ...sub,
     cost: Number(sub.cost),
     splitCost: sub.splitCost ? Number(sub.splitCost) : 0,
   }));
 
-  const rates = await getLiveRates(user?.preferredCurrency || "USD");
-  return { subs, user, rates };
-}
-
-export default async function DashboardPage() {
-  const { subs, user, rates } = await getData();
-  const baseCurrency = user?.preferredCurrency || "USD";
-  
-  const { 
-    monthlyBurn, 
-    annualProjection, 
-    activeTrials, 
-    graveyardStats, 
-    redundancyInsights, 
+  const {
+    monthlyBurn,
+    annualProjection,
+    activeTrials,
+    graveyardStats,
+    redundancyInsights,
   } = processSubscriptionData(subs, rates, baseCurrency);
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-6 animate-in fade-in duration-500 pb-0 overflow-x-hidden">
-      
-      {/* 👇 SHOW ONBOARDING IF NEW USER */}
-      {user && !user.hasCompletedOnboarding && (
-         <OnboardingFlow isOpen={true} />
-      )}
+      {/* Show Onboarding if needed */}
+      {user && !user.hasCompletedOnboarding && <OnboardingFlow isOpen={true} />}
 
       <DashboardHeader user={user} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsGrid 
-          monthlyBurn={monthlyBurn} 
-          annualProjection={annualProjection} 
-          activeTrials={activeTrials} 
-          totalSaved={graveyardStats.totalSavedMonthly} 
-          currency={baseCurrency} 
+        <StatsGrid
+          monthlyBurn={monthlyBurn}
+          annualProjection={annualProjection}
+          activeTrials={activeTrials}
+          totalSaved={graveyardStats.totalSavedMonthly}
+          currency={baseCurrency}
         />
       </div>
 
       {redundancyInsights.length > 0 && (
-         <div className="w-full animate-in slide-in-from-top-2">
-            <InsightsCard redundancies={redundancyInsights} currency={baseCurrency} />
-         </div>
+        <div className="w-full animate-in slide-in-from-top-2">
+          <InsightsCard
+            redundancies={redundancyInsights}
+            currency={baseCurrency}
+          />
+        </div>
       )}
 
-      {/* Fixed height row for Chart & Upcoming Bills */}
+      {/* Main Content Row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 xl:grid-cols-4 lg:h-[320px]">
-        
         {/* Main Chart */}
         <div className="lg:col-span-2 xl:col-span-3 h-[320px] lg:h-full">
-           <Card className="h-full border-border bg-card shadow-sm flex flex-col">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  Spending Velocity
-                  <TooltipProvider>
-                    <Tooltip delayDuration={300}>
-                      <TooltipTrigger asChild>
-                        <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-primary transition-colors" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Visualizes your projected spending for the next 6 months.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 min-h-0">
-                 <SpendingChart data={subs} rates={rates} currency={baseCurrency} />
-              </CardContent>
-           </Card>
+          <Card className="h-full border-border bg-card shadow-sm flex flex-col">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                Spending Velocity
+                <TooltipProvider>
+                  <Tooltip delayDuration={300}>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-primary transition-colors" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        Visualizes your projected spending for the next 6
+                        months.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 min-h-0">
+              <SpendingChart
+                data={subs}
+                rates={rates}
+                currency={baseCurrency}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         {/* Side Widget */}
         <div className="lg:col-span-1 xl:col-span-1 h-auto lg:h-full">
-           <UpcomingBills data={subs} rates={rates} currency={baseCurrency} />
+          <UpcomingBills data={subs} rates={rates} currency={baseCurrency} />
         </div>
       </div>
 
       <div className="pt-5">
-         <SubscriptionCarousel data={subs} currency={baseCurrency} rates={rates} />
+        <SubscriptionCarousel
+          data={subs}
+          currency={baseCurrency}
+          rates={rates}
+        />
       </div>
-
     </div>
   );
 }

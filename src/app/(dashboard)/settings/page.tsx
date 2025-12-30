@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma"; // 👈 Import prisma
+import { prisma } from "@/lib/prisma"; 
 import { redirect } from "next/navigation";
 import SettingsView from "@/components/settings/SettingsView";
 
@@ -11,7 +11,7 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/");
 
-  // 👇 FIX: Fetch fresh user data from DB instead of relying on stale session
+  // Fetch fresh user data from DB
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
   });
@@ -20,7 +20,6 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8">
-      {/* Pass the fresh user object */}
       <SettingsView user={user} />
     </div>
   );

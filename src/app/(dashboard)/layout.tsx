@@ -1,8 +1,8 @@
+import { Suspense } from "react";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { GlobalSpotlight } from "@/components/GlobalSpotlight";
-import { prisma } from "@/lib/prisma";
+import { SearchWrapper } from "@/components/dashboard/SearchWrapper";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation"; // Optional: Safety check
+import { redirect } from "next/navigation"; // 👈 Import redirect
 
 export default async function DashboardLayout({
   children,
@@ -11,24 +11,17 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  // Safety: If no session, they shouldn't see the dashboard anyway
+  // 👇 FIX: Redirect instead of returning null
   if (!session?.user) {
-    // redirect("/auth/login"); // Uncomment this if you want strict protection
-    return null; 
+    redirect("/auth/login");
   }
-  
-  // Fetch simple list for search
-  const subs = session?.user?.id ? await prisma.subscription.findMany({
-    where: { userId: session.user.id },
-    select: { id: true, vendor: { select: { name: true } } }
-  }) : [];
-
-  const searchData = subs.map(s => ({ id: s.id, vendorName: s.vendor.name }));
 
   return (
     <>
-      <GlobalSpotlight subscriptions={searchData} />
-      {/* 👇 FIX: Pass the user object here */}
+      <Suspense fallback={null}>
+        <SearchWrapper />
+      </Suspense>
+
       <DashboardShell user={session.user}>
         {children}
       </DashboardShell>

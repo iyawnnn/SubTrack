@@ -3,29 +3,48 @@
 import React from "react";
 import { Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function Footer() {
   const pathname = usePathname();
+  const isLandingPage = pathname === "/";
 
-  // 👇 Hide Footer on Auth pages
+  // Hide Footer on Auth pages
   if (pathname?.startsWith("/auth")) {
     return null;
   }
 
   return (
-    <footer className="relative border-t border-border/40 bg-background/80 backdrop-blur-xl">
+    <footer 
+      className={cn(
+        "relative border-t transition-colors",
+        // 👇 FIX: Force Dark Mode colors on Landing Page
+        isLandingPage 
+          ? "bg-[#050505] border-white/10 text-zinc-400" 
+          : "bg-background/80 border-border/40 text-muted-foreground backdrop-blur-xl"
+      )}
+    >
        {/* Stylish Top Gradient Line */}
        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
 
       <div className="container mx-auto flex flex-col items-center justify-between gap-3 py-6 px-4 sm:px-6 lg:px-8 md:h-16 md:flex-row md:py-0">
         
         {/* Left: Copyright */}
-        <p className="text-xs text-muted-foreground text-center md:text-left">
-          &copy; {new Date().getFullYear()} <span className="font-semibold text-foreground">SubTrack</span>. All rights reserved.
+        <p className={cn(
+          "text-xs text-center md:text-left",
+          isLandingPage ? "text-zinc-500" : "text-muted-foreground"
+        )}>
+          &copy; {new Date().getFullYear()} <span className={cn(
+            "font-semibold", 
+            isLandingPage ? "text-white" : "text-foreground"
+          )}>SubTrack</span>. All rights reserved.
         </p>
 
         {/* Right: Credits */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className={cn(
+          "flex items-center gap-1.5 text-xs",
+          isLandingPage ? "text-zinc-500" : "text-muted-foreground"
+        )}>
           <span>Designed & Developed by</span>
           <a 
             href="https://github.com/iyawnnn" 

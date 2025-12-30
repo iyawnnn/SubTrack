@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-// Import startTransition
 import { startTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -159,13 +158,15 @@ export function SubscriptionModal({
       vendor: { name: values.vendorName },
     };
 
-    // WRAP EVERYTHING IN ASYNC TRANSITION
     startTransition(async () => {
-      // 1. Show Optimistic Update immediately
-      if (!subToEdit && addOptimisticSub) {
+      // Determine if we can run the optimistic update
+      const canRunOptimistic = !subToEdit && !!addOptimisticSub;
+
+      // 1. Show Optimistic Update immediately if possible
+      if (canRunOptimistic && addOptimisticSub) {
         addOptimisticSub(optimisticData);
         toast.success("Subscription Added");
-        close(); // Close immediately for "instant" feel
+        close();
       }
 
       try {
@@ -175,11 +176,14 @@ export function SubscriptionModal({
           : await createSubscription(payload);
 
         if (result.success) {
-          if (subToEdit) {
-            toast.success("Subscription Updated");
+          // 3. Fallback: If we didn't do the optimistic close (e.g. Editing or addOptimisticSub missing), do it now.
+          if (!canRunOptimistic) {
+            toast.success(
+              subToEdit ? "Subscription Updated" : "Subscription Added"
+            );
             close();
           }
-          // 3. Refresh data (this replaces optimistic state with real data)
+
           router.refresh();
         } else {
           toast.error("Error", {
@@ -213,7 +217,6 @@ export function SubscriptionModal({
 
         <div className="p-6 pt-4">
           <Form {...form}>
-            {/* Note: onSubmit is now sync wrapper around async transition */}
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               {/* 1. VENDOR NAME */}
               <FormField

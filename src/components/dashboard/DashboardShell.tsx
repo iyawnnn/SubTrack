@@ -104,7 +104,6 @@ export function DashboardShell({
                   <Link
                     key={item.link}
                     href={item.link}
-                    // 👇 ADDED: Desktop ID
                     data-testid={`nav-${item.label.toLowerCase()}`}
                     className={cn(
                       "relative px-4 py-1.5 text-sm font-medium transition-colors z-10",
@@ -170,12 +169,13 @@ export function DashboardShell({
             {/* Mobile Menu Trigger */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
+                {/* 👇 FIX: Added suppressHydrationWarning here too */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  // 👇 ADDED: Mobile Menu Trigger ID
                   data-testid="btn-mobile-menu"
                   className="lg:hidden text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
+                  suppressHydrationWarning
                 >
                   <AlignRight className="h-6 w-6" />
                 </Button>
@@ -218,7 +218,6 @@ export function DashboardShell({
                         key={item.link}
                         href={item.link}
                         onClick={() => setIsMobileOpen(false)}
-                        // 👇 ADDED: Mobile Link ID (Different from desktop to avoid ambiguity)
                         data-testid={`mobile-nav-${item.label.toLowerCase()}`}
                         className={cn(
                           "flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-all duration-200",

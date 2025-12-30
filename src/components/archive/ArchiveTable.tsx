@@ -49,13 +49,14 @@ export function ArchiveTable({ data, onRestore, onDelete }: ArchiveTableProps) {
             
             <TableCell>
                <span className="font-medium text-muted-foreground decoration-border">
+                  {/* Using subscription currency as we aren't converting here */}
                   {formatCurrency(sub.cost, sub.currency)}
                </span>
                <span className="text-xs text-muted-foreground ml-1">/ {sub.frequency === "MONTHLY" ? "mo" : "yr"}</span>
             </TableCell>
             
             <TableCell className="text-muted-foreground text-sm">
-                {sub.endDate ? dayjs(sub.endDate).format("MMM D, YYYY") : "N/A"}
+                {sub.updatedAt ? dayjs(sub.updatedAt).format("MMM D, YYYY") : "N/A"}
             </TableCell>
             
             <TableCell>

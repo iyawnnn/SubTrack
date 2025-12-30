@@ -21,7 +21,13 @@ import { deleteSubscription, restoreSubscription } from "@/actions/subscription-
 
 const ITEMS_PER_PAGE = 6;
 
-export default function ArchiveView({ initialData }: { initialData: any[] }) {
+// 👇 FIX: Added 'currency' to props interface to fix build error
+interface ArchiveViewProps {
+  initialData: any[];
+  currency: string;
+}
+
+export default function ArchiveView({ initialData, currency }: ArchiveViewProps) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -34,7 +40,7 @@ export default function ArchiveView({ initialData }: { initialData: any[] }) {
     sub.vendor.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 👇 FIX: Auto-redirect to previous page if current page becomes empty
+  // Auto-redirect to previous page if current page becomes empty
   useEffect(() => {
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
     if (currentPage > totalPages && totalPages > 0) {

@@ -17,17 +17,17 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  
+   
   // Relations
   accounts      Account[]
   sessions      Session[]
   subscriptions Subscription[]
   vendors       Vendor[]
   circles       UserCircle[] 
-  
+   
   preferredCurrency String @default("USD")
 
-  // 👇 NEW: Onboarding Flags
+  // Onboarding Flags
   hasCompletedOnboarding Boolean @default(false)
   emailNotifications     Boolean @default(true)
 
@@ -47,12 +47,12 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
- 
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
- 
+  
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+  
   @@id([provider, providerAccountId])
 }
 
@@ -61,7 +61,7 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -70,7 +70,7 @@ model VerificationToken {
   identifier String
   token      String
   expires    DateTime
- 
+  
   @@id([identifier, token])
 }
 
@@ -98,7 +98,7 @@ model Vendor {
   name      String
   website   String?
   logoUrl   String?
-  
+   
   // Relation to User (Multi-tenant security)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -108,31 +108,35 @@ model Vendor {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Subscription {
   id              String   @id @default(cuid())
   userId          String
   vendorId        String
-  
+   
   cost            Decimal  @db.Decimal(10, 2)
   splitCost       Decimal  @default(0) @db.Decimal(10, 2)
   currency        String   @default("USD")
-  
+   
   frequency       BillingFrequency 
 
   startDate       DateTime
   nextRenewalDate DateTime
   isTrial         Boolean  @default(false)
   category        String   @default("Uncategorized")
-  
+   
   status          SubStatus @default(ACTIVE) 
-  
+   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  @@index([userId])
 }
 
 // --- Collaborative Models ---
@@ -149,10 +153,10 @@ model Circle {
 model UserCircle {
   id        String     @id @default(cuid())
   role      CircleRole @default(MEMBER)
-  
+   
   userId    String
   circleId  String
-  
+   
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   circle    Circle     @relation(fields: [circleId], references: [id], onDelete: Cascade)
 
