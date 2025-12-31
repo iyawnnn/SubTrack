@@ -23,22 +23,24 @@ jobs:
         pnpm install
         pnpm exec playwright install --with-deps
 
-    # 👇 This wipes your TEST Supabase project clean (Safe!)
-    - name: Reset Test Database
-      run: pnpm prisma migrate reset --force
+    # 1. 👇 Generate the Prisma Client code
+    - name: Generate Prisma Client
+      run: pnpm prisma generate
+
+    # 2. 👇 Sync the schema to your TEST database
+    - name: Setup Test Database
+      run: pnpm prisma db push --accept-data-loss
       env:
         DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
         DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
 
-    # 👇 Runs the tests using the TEST database
+    # 3. 👇 Run the tests
     - name: Run Playwright Tests
       run: pnpm exec playwright test
       env:
-        # Override the app's DB connection to use the Test project
         DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
         DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
         AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-        # Mocks
         AUTH_URL: "http://localhost:3000"
         AUTH_TRUST_HOST: "true"
         RESEND_API_KEY: "re_mock_key"
