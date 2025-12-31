@@ -32,7 +32,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    document.title = "Login | SubTrack";
+    document.title = "Login | SubVantage";
   }, []);
 
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -96,7 +96,7 @@ export default function LoginPage() {
                   <path d="M12 7v1" />
                </svg>
             </div>
-            <span className="text-xl font-bold tracking-tight">SubTrack</span>
+            <span className="text-xl font-bold tracking-tight">SubVantage</span>
         </div>
 
         <div className="relative z-10 max-w-lg">
@@ -123,7 +123,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 text-sm text-muted-foreground/60">
-           © {new Date().getFullYear()} SubTrack Inc. All rights reserved.
+           © {new Date().getFullYear()} SubVantage. All rights reserved.
         </div>
       </div>
 

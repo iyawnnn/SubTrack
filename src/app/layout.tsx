@@ -13,7 +13,7 @@ const satoshi = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "SubTrack",
+  title: "SubVantage",
   description: "Manage your subscriptions with ease.",
 };
 

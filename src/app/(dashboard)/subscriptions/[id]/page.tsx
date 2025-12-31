@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   if (!session?.user) {
-    return { title: "Details | SubTrack" };
+    return { title: "Details | SubVantage" };
   }
 
   // Fetch just enough data to get the title
@@ -28,12 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 
   if (!sub) {
-    return { title: "Subscription Not Found | SubTrack" };
+    return { title: "Subscription Not Found | SubVantage" };
   }
 
-  // Example: "GitHub | SubTrack"
+  // Example: "GitHub | SubVantage"
   return {
-    title: `${sub.vendor.name} | SubTrack`,
+    title: `${sub.vendor.name} | SubVantage`,
   };
 }
 

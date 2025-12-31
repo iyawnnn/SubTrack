@@ -50,7 +50,7 @@ export const TrialReminderEmail = ({
             If you want to keep it, no action is needed. If you want to cancel,
             do it now to avoid being charged.
           </Text>
-          <Link href="https://subtrack.vercel.app/dashboard" style={button}>
+          <Link href="https://subvantage.vercel.app/dashboard" style={button}>
             Check Dashboard
           </Link>
         </Container>

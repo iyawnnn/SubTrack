@@ -93,7 +93,7 @@ export function DashboardShell({
                 </svg>
               </div>
               <span className="text-xl font-bold tracking-tight text-foreground">
-                SubTrack
+                SubVantage
               </span>
             </Link>
 

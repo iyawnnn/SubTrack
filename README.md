@@ -1,11 +1,11 @@
-# SubTrack | Intelligent Subscription Manager
+# SubVantage | Intelligent Subscription Manager
 
-SubTrack is a specialized financial dashboard designed to centralize the management of recurring digital expenses. The primary objective of the platform is to provide users with a granular view of their financial footprint, eliminating "vampire costs" through automated tracking, renewal forecasting, and spending analytics. It is built to transform chaotic bank statement data into a streamlined, visual command center.
+SubVantage is a specialized financial dashboard designed to centralize the management of recurring digital expenses. The primary objective of the platform is to provide users with a granular view of their financial footprint, eliminating "vampire costs" through automated tracking, renewal forecasting, and spending analytics. It is built to transform chaotic bank statement data into a streamlined, visual command center.
 
 
 ## Technical Solution
 
-The application addresses the synchronization gap between scattered billing cycles and actual monthly spending. By leveraging server-side calculations and real-time currency normalization, SubTrack provides a unified financial truth regardless of the billing source or original currency.
+The application addresses the synchronization gap between scattered billing cycles and actual monthly spending. By leveraging server-side calculations and real-time currency normalization, SubVantage provides a unified financial truth regardless of the billing source or original currency.
 
 ### Key Functional Areas
 

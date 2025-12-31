@@ -37,7 +37,7 @@ export function Footer() {
           &copy; {new Date().getFullYear()} <span className={cn(
             "font-semibold", 
             isLandingPage ? "text-white" : "text-foreground"
-          )}>SubTrack</span>. All rights reserved.
+          )}>SubVantage</span>. All rights reserved.
         </p>
 
         {/* Right: Credits */}

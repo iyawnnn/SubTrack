@@ -39,7 +39,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    document.title = "Sign Up | SubTrack";
+    document.title = "Sign Up | SubVantage";
   }, []);
 
   const form = useForm<z.infer<typeof signupSchema>>({
@@ -102,7 +102,7 @@ export default function SignupPage() {
                   <path d="M12 7v1" />
                </svg>
             </div>
-            <span className="text-xl font-bold tracking-tight">SubTrack</span>
+            <span className="text-xl font-bold tracking-tight">SubVantage</span>
         </div>
 
         <div className="relative z-10 max-w-lg">
@@ -129,7 +129,7 @@ export default function SignupPage() {
         </div>
 
         <div className="relative z-10 text-sm text-muted-foreground/60">
-           © {new Date().getFullYear()} SubTrack Inc. All rights reserved.
+           © {new Date().getFullYear()} SubVantage. All rights reserved.
         </div>
       </div>
 

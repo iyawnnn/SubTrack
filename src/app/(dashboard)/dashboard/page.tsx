@@ -19,7 +19,7 @@ import { Info } from "lucide-react";
 import { OnboardingFlow } from "@/components/dashboard/OnboardingFlow";
 
 export const metadata = {
-  title: "Dashboard | SubTrack",
+  title: "Dashboard | SubVantage",
   description: "Your financial pulse at a glance.",
 };
 

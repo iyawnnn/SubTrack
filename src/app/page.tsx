@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "SubTrack - Master Your Subscriptions",
+  title: "SubVantage - Master Your Subscriptions",
   description:
     "The intelligent way to track, manage, and optimize your recurring expenses.",
 };
@@ -51,7 +51,7 @@ export default function LandingPage() {
                 </svg>
               </div>
               <span className="hidden md:block text-lg font-bold tracking-tight text-white group-hover:text-violet-500 transition-colors">
-                SubTrack
+                SubVantage
               </span>
             </div>
 
@@ -94,7 +94,7 @@ export default function LandingPage() {
 
             <p className="mx-auto max-w-2xl text-lg md:text-xl text-zinc-400 leading-relaxed mb-10 animate-in fade-in slide-in-from-bottom-5 duration-1000 delay-100">
               The average person wastes <strong>$500/year</strong> on unused
-              subscriptions. SubTrack helps you find, track, and cancel the
+              subscriptions. SubVantage helps you find, track, and cancel the
               noise.
             </p>
 
@@ -236,7 +236,7 @@ export default function LandingPage() {
                 </span>
               </h2>
               <p className="text-zinc-400 text-lg">
-                We've packed SubTrack with power-user features without the
+                We've packed SubVantage with power-user features without the
                 clutter.
               </p>
             </div>
@@ -378,12 +378,12 @@ export default function LandingPage() {
             </h2>
             <div className="space-y-4">
               <FaqItem
-                question="Is SubTrack really free?"
+                question="Is SubVantage really free?"
                 answer="Yes! Our Free Tier gives you unlimited subscriptions and manual tracking. We believe financial health should be accessible to everyone."
               />
               <FaqItem
                 question="Do you connect to my bank account?"
-                answer="No. SubTrack is a manual tracking tool. We prioritize privacy and security, meaning we never ask for your bank login credentials."
+                answer="No. SubVantage is a manual tracking tool. We prioritize privacy and security, meaning we never ask for your bank login credentials."
               />
               <FaqItem
                 question="Does it support different currencies?"
@@ -407,7 +407,7 @@ export default function LandingPage() {
                 </h2>
                 <p className="text-zinc-400 text-lg md:text-xl">
                   Join smart spenders who are saving money every month with
-                  SubTrack. It takes less than 2 minutes to set up.
+                  SubVantage. It takes less than 2 minutes to set up.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                   <Link href="/auth/signup">
