@@ -129,6 +129,8 @@ model Subscription {
   category        String   @default("Uncategorized")
    
   status          SubStatus @default(ACTIVE) 
+
+  lastNotifiedAt  DateTime?
    
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

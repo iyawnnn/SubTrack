@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
-import { TrialReminderEmail } from "@/components/emails/TrialReminder"; // Import the component
+import { TrialReminderEmail } from "@/components/emails/TrialReminder";
 import dayjs from "dayjs";
 
 export const dynamic = "force-dynamic";
@@ -36,10 +36,13 @@ export async function GET(req: Request) {
       const daysLeft = dayjs(sub.nextRenewalDate).diff(now, "day");
 
       const { data, error } = await resend.emails.send({
-        from: "SubTrack <onboarding@resend.dev>",
-        to: "substrack.dev@gmail.com", // Hardcoded for testing
+        // 👇 UPDATE 1: Use your new verified domain & Brand Name
+        from: "SubVantage <updates@subvantage.iansebastian.dev>",
+        
+        // 👇 UPDATE 2: Send to the ACTUAL user (since you are now verified)
+        to: sub.user.email, 
+        
         subject: `⚠️ Action Required: ${sub.vendor.name} trial ending`,
-        // ✅ Correct usage: Passing props to the imported component
         react: TrialReminderEmail({
           userName: sub.user.name || "User",
           vendorName: sub.vendor.name,

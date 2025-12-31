@@ -15,70 +15,71 @@ import {
 } from "@react-email/components";
 import * as React from "react";
 
-interface TrialReminderEmailProps {
+interface UpcomingBillProps {
   userName: string;
   vendorName: string;
-  daysLeft: number;
-  renewalCost?: string;
+  amount: string;
+  renewalDate: string;
 }
 
-export const TrialReminderEmail = ({
+export const UpcomingBillEmail = ({
   userName,
   vendorName,
-  daysLeft,
-  renewalCost = "$0.00",
-}: TrialReminderEmailProps) => {
+  amount,
+  renewalDate,
+}: UpcomingBillProps) => {
   return (
     <Html>
       <Head />
-      <Preview>Action Required: {vendorName} trial ending</Preview>
+      <Preview>Upcoming renewal: {vendorName}</Preview>
       <Body style={main}>
         <Container style={container}>
           
           {/* Main Card */}
           <Section style={card}>
-            <Heading style={h1}>Trial Ending Soon</Heading>
+            <Heading style={h1}>Upcoming Renewal</Heading>
             <Text style={text}>Hi {userName},</Text>
             <Text style={text}>
-              Your free trial for <strong style={bold}>{vendorName}</strong> is set to expire in <span style={urgent}>{daysLeft} days</span>.
-            </Text>
-            
-            <Text style={text}>
-              We wanted to remind you so you aren't charged unexpectedly. If you wish to continue, no action is needed.
+              Your subscription for <strong style={bold}>{vendorName}</strong> is scheduled to renew automatically on <span style={dateHighlight}>{renewalDate}</span>.
             </Text>
 
             <Hr style={divider} />
 
-            {/* Subscription Details Table */}
+            {/* Invoice Details */}
             <Section style={detailsTable}>
               <Row style={tableRow}>
-                <Column style={tableLabel}>Subscription</Column>
-                <Column style={tableValue}>{vendorName} Premium</Column>
+                <Column style={tableLabel}>Service</Column>
+                <Column style={tableValue}>{vendorName}</Column>
               </Row>
               <Row style={tableRow}>
-                <Column style={tableLabel}>Renewal Date</Column>
-                <Column style={tableValue}>In {daysLeft} Days</Column>
+                <Column style={tableLabel}>Date</Column>
+                <Column style={tableValue}>{renewalDate}</Column>
               </Row>
               <Row style={tableRow}>
-                <Column style={tableLabel}>Amount</Column>
-                <Column style={tableValueLarge}>{renewalCost}</Column>
+                <Column style={tableLabel}>Payment Method</Column>
+                <Column style={tableValue}>Default Card</Column>
+              </Row>
+              <Hr style={innerDivider} />
+              <Row style={tableRow}>
+                <Column style={tableLabel}>Total</Column>
+                <Column style={tableValueLarge}>{amount}</Column>
               </Row>
             </Section>
 
             <Hr style={divider} />
 
-            {/* Primary Action */}
+            {/* Action */}
             <Section style={btnContainer}>
               <Button 
                 style={button} 
                 href="https://subvantage.iansebastian.dev/dashboard"
               >
-                Review Subscription
+                Manage Subscription
               </Button>
             </Section>
             
             <Text style={subtext}>
-              You can cancel this subscription at any time from your dashboard before the renewal date to avoid charges.
+              If you want to keep this subscription, no action is needed. You can view your invoice history in your dashboard.
             </Text>
           </Section>
 
@@ -99,7 +100,7 @@ export const TrialReminderEmail = ({
   );
 };
 
-// --- Styles ---
+// --- Styles (Identical to above) ---
 
 const main = {
   backgroundColor: "#f6f9fc",
@@ -142,17 +143,22 @@ const bold = {
   fontWeight: "600",
 };
 
-const urgent = {
-  color: "#d93025",
-  fontWeight: "600",
-  backgroundColor: "#fce8e6",
+const dateHighlight = {
+  backgroundColor: "#f0f9ff",
+  color: "#0284c7",
   padding: "2px 6px",
   borderRadius: "4px",
+  fontWeight: "600",
 };
 
 const divider = {
   borderColor: "#e6ebf1",
   margin: "24px 0",
+};
+
+const innerDivider = {
+  borderColor: "#f1f5f9",
+  margin: "12px 0",
 };
 
 const detailsTable = {
@@ -235,4 +241,4 @@ const footerCopyright = {
   lineHeight: "20px",
 };
 
-export default TrialReminderEmail;
+export default UpcomingBillEmail;
